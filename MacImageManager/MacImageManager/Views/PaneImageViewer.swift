@@ -1,5 +1,5 @@
 //
-//  ImageViewerPane.swift
+//  PaneImageViewer.swift
 //  MacImageManager
 //
 //  Created by Brent Ely on 9/23/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ImageViewerPane: View {
+struct PaneImageViewer: View {
     let selectedImage: URL?
     @State private var loadedImage: NSImage?
     
@@ -62,5 +62,5 @@ struct ImageViewerPane: View {
 }
 
 #Preview {
-    ImageViewerPane(selectedImage: nil)
+    PaneImageViewer(selectedImage: nil)
 }

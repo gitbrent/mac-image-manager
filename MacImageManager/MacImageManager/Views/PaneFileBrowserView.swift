@@ -1,5 +1,5 @@
 //
-//  DirectoryBrowserView.swift
+//  PaneFileBrowserView.swift
 //  MacImageManager
 //
 //  Created by Brent Ely on 9/22/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct DirectoryBrowserView: View {
+struct PaneFileBrowserView: View {
     @EnvironmentObject var browserModel: DirectoryBrowserModel
     @Binding var selectedImage: URL?
     
@@ -19,7 +19,7 @@ struct DirectoryBrowserView: View {
             Divider()
             // 3: File list
             List(browserModel.items, id: \.self, selection: $selectedImage) { item in
-                FileRowView(url: item, browserModel: browserModel)
+                FileBrowserRowView(url: item, browserModel: browserModel)
                     .onTapGesture {
                         if browserModel.isDirectory(item) {
                             browserModel.navigateInto(directory: item)
@@ -35,7 +35,7 @@ struct DirectoryBrowserView: View {
 // Add a separate Preview for DirectoryBrowserView that uses mock data
 struct DirectoryBrowserView_Previews: PreviewProvider {
     static var previews: some View {
-        DirectoryBrowserView(selectedImage: .constant(nil))
+        PaneFileBrowserView(selectedImage: .constant(nil))
             .environmentObject(DirectoryBrowserModel.forPreview())
     }
 }
@@ -67,6 +67,6 @@ struct NavigationHeader: View {
 }
 
 #Preview {
-    DirectoryBrowserView(selectedImage: .constant(nil))
+    PaneFileBrowserView(selectedImage: .constant(nil))
         .environmentObject(DirectoryBrowserModel.forPreview())
 }

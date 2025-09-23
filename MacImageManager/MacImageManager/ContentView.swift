@@ -16,11 +16,11 @@ struct ContentView: View {
     var body: some View {
         HSplitView {
             // Left sidebar - File browser
-            DirectoryBrowserView(selectedImage: $selectedImage)
+            PaneFileBrowserView(selectedImage: $selectedImage)
                 .frame(minWidth: 200, maxWidth: 400)
             
             // Right pane - Image viewer
-            ImageViewerPane(selectedImage: selectedImage)
+            PaneImageViewer(selectedImage: selectedImage)
                 .frame(minWidth: 400)
         }
         .fileImporter(

@@ -1,5 +1,5 @@
 //
-//  FileRowView.swift
+//  FileBrowserRowView.swift
 //  MacImageManager
 //
 //  Created by Brent Ely on 9/22/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct FileRowView: View {
+struct FileBrowserRowView: View {
     let url: URL
     let browserModel: DirectoryBrowserModel
     
@@ -48,7 +48,7 @@ struct FileRowView: View {
 
 struct FileRowView_Previews: PreviewProvider {
     static var previews: some View {
-        FileRowView(
+        FileBrowserRowView(
             url: URL(string: "file:///Users/brentely/Documents/eosim_image.png")!,
             browserModel: DirectoryBrowserModel.forPreview()
         )
@@ -57,7 +57,7 @@ struct FileRowView_Previews: PreviewProvider {
 }
 
 #Preview("File Row") {
-    FileRowView(
+    FileBrowserRowView(
         url: URL(string: "file:///Users/brentely/Documents/eosim_image.png")!,
         browserModel: DirectoryBrowserModel.forPreview()
     )
