@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct MacImageManagerApp: App {
-    @StateObject private var browserModel = DirectoryBrowserModel()
+    @StateObject private var browserModel = BrowserModel()
 
     var body: some Scene {
         WindowGroup {

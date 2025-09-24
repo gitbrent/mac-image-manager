@@ -9,17 +9,17 @@ import SwiftUI
 
 struct FileBrowserRowView: View {
     let url: URL
-    let browserModel: DirectoryBrowserModel
-    
+    let browserModel: BrowserModel
+
     var body: some View {
         HStack {
             Image(systemName: browserModel.isDirectory(url) ? "folder.fill" : "photo")
                 .foregroundColor(browserModel.isDirectory(url) ? .blue : .orange)
                 .frame(width: 16)
-            
+
             Text(url.lastPathComponent)
                 .lineLimit(1)
-            
+
             Spacer()
         }
         .padding(.vertical, 2)
@@ -35,30 +35,44 @@ struct FileBrowserRowView: View {
             }
             // TODO: Add other menu items as needed
             Divider()
-            
+
             Button("Rename") {
                 print("TODO: Implement rename functionality")
             }
-            
+
             Button("Get Info") {
                 print("TODO: Implement get info functionality")
             }
         }
-    }}
+    }
+}
 
+/*
 struct FileRowView_Previews: PreviewProvider {
     static var previews: some View {
         FileBrowserRowView(
-            url: URL(string: "file:///Users/brentely/Documents/eosim_image.png")!,
+            url: URL(fileURLWithPath: "/tmp/preview.png"),
             browserModel: DirectoryBrowserModel.forPreview()
         )
         .padding()
     }
 }
+*/
 
-#Preview("File Row") {
-    FileBrowserRowView(
-        url: URL(string: "file:///Users/brentely/Documents/eosim_image.png")!,
-        browserModel: DirectoryBrowserModel.forPreview()
-    )
+#Preview {
+    Group {
+        // Preview an image row
+        FileBrowserRowView(
+            url: Bundle.main.resourceURL!.appendingPathComponent("preview1.png"),
+            browserModel: BrowserModel.preview
+        )
+
+        // Preview a folder row
+        FileBrowserRowView(
+            url: FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0],
+            browserModel: BrowserModel.preview
+        )
+    }
+    .padding()
 }
+

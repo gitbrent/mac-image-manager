@@ -10,7 +10,7 @@ import SwiftUI
 struct PaneImageViewer: View {
     let selectedImage: URL?
     @State private var loadedImage: NSImage?
-    
+
     var body: some View {
         Group {
             if selectedImage != nil {
@@ -44,13 +44,13 @@ struct PaneImageViewer: View {
             loadImage(from: newValue)
         }
     }
-    
+
     private func loadImage(from url: URL?) {
         guard let url = url else {
             loadedImage = nil
             return
         }
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             if let image = NSImage(contentsOf: url) {
                 DispatchQueue.main.async {
@@ -61,6 +61,14 @@ struct PaneImageViewer: View {
     }
 }
 
-#Preview {
+#Preview("Empty State") {
     PaneImageViewer(selectedImage: nil)
+        .frame(width: 300, height: 400)
+}
+
+#Preview("With Image") {
+    PaneImageViewer(
+        selectedImage: Bundle.main.resourceURL?.appendingPathComponent("preview1.png")
+    )
+    .frame(width: 300, height: 400)
 }
