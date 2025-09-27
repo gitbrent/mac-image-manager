@@ -52,7 +52,7 @@ struct FileRowView_Previews: PreviewProvider {
     static var previews: some View {
         FileBrowserRowView(
             url: URL(fileURLWithPath: "/tmp/preview.png"),
-            browserModel: DirectoryBrowserModel.forPreview()
+            browserModel: BrowserModel.preview
         )
         .padding()
     }
@@ -75,4 +75,3 @@ struct FileRowView_Previews: PreviewProvider {
     }
     .padding()
 }
-
