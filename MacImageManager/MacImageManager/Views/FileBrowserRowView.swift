@@ -9,17 +9,22 @@ import SwiftUI
 
 struct FileBrowserRowView: View {
     let url: URL
-    //let browserModel: BrowserModel
     @EnvironmentObject var browserModel: BrowserModel
 
     var body: some View {
         HStack {
             Image(systemName: browserModel.isDirectory(url) ? "folder.fill" : "photo")
+                .font(.system(size: 24))
                 .foregroundColor(browserModel.isDirectory(url) ? .blue : .orange)
-                .frame(width: 16)
+                .frame(width: 32, height: 32)
 
-            Text(url.lastPathComponent)
-                .lineLimit(1)
+            VStack(alignment: .leading) {
+                Text(url.lastPathComponent)
+                    .lineLimit(1)
+                Text(url.path)
+                    .lineLimit(1)
+                    .foregroundColor(.gray)
+            }
 
             Spacer()
         }
@@ -77,7 +82,6 @@ struct FileRowView_Previews: PreviewProvider {
     .padding()
 }
 */
-
 
 /// ====================
 
