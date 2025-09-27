@@ -1,5 +1,5 @@
 //
-//  DirectoryBrowserModel.swift
+//  BrowserModel.swift
 //  MacImageManager
 //
 //  Created by Brent Ely on 9/20/25.
@@ -222,37 +222,3 @@ class BrowserModel: ObservableObject {
         return imageURLs.last
     }
 }
-/*
-extension DirectoryBrowserModel {
-    static func forPreview() -> DirectoryBrowserModel {
-        let model = PreviewDirectoryBrowserModel()
-        model.items = [
-            URL(fileURLWithPath: "/Users/testuser/Documents/Folder A"),
-            URL(fileURLWithPath: "/Users/testuser/Documents/image1.jpg"),
-            URL(fileURLWithPath: "/Users/testuser/Documents/image2.png"),
-            URL(fileURLWithPath: "/Users/testuser/Documents/Folder B"),
-            URL(fileURLWithPath: "/tmp/preview.png"),
-        ]
-        model.currentDirectory = URL(fileURLWithPath: "/Users/testuser/Documents")
-        return model
-    }
-}
-
-// Special preview-only subclass that overrides file system operations
-private class PreviewDirectoryBrowserModel: DirectoryBrowserModel {
-    private let mockDirectories: Set<String> = ["Folder A", "Folder B"]
-
-    override func isDirectory(_ url: URL) -> Bool {
-        return mockDirectories.contains(url.lastPathComponent)
-    }
-
-    override func loadCurrentDirectory() {
-        // Do nothing in preview - we use the static items
-    }
-
-    override func navigateInto(directory: URL) {
-        // Do nothing in preview - we use the static items
-    }
-}
-*/
-
