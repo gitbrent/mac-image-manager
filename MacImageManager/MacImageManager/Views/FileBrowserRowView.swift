@@ -9,7 +9,8 @@ import SwiftUI
 
 struct FileBrowserRowView: View {
     let url: URL
-    let browserModel: BrowserModel
+    //let browserModel: BrowserModel
+    @EnvironmentObject var browserModel: BrowserModel
 
     var body: some View {
         HStack {
@@ -58,7 +59,7 @@ struct FileRowView_Previews: PreviewProvider {
     }
 }
 */
-
+/*
 #Preview {
     Group {
         // Preview an image row
@@ -74,4 +75,22 @@ struct FileRowView_Previews: PreviewProvider {
         )
     }
     .padding()
+}
+*/
+
+
+/// ====================
+
+private struct FileBrowserRowViewPreviewContainer: View {
+    @StateObject private var model = BrowserModel.preview
+
+    var body: some View {
+        FileBrowserRowView(url: model.items.first!)
+            .environmentObject(model)
+    }
+}
+
+#Preview {
+    FileBrowserRowViewPreviewContainer()
+        .frame(width: 300, height: 400)
 }

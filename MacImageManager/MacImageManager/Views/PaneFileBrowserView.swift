@@ -19,7 +19,8 @@ struct PaneFileBrowserView: View {
             Divider()
             // 3: File list
             List(browserModel.items, id: \.self, selection: $selectedImage) { item in
-                FileBrowserRowView(url: item, browserModel: browserModel)
+                FileBrowserRowView(url: item)
+                    .environmentObject(browserModel)
                     .tag(item)
                     .contentShape(Rectangle())
                     .onTapGesture {
