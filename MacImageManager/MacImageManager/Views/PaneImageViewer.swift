@@ -33,7 +33,7 @@ struct PaneImageViewer: View {
                         .font(.system(size: 64))
                         .foregroundColor(.secondary)
                         .padding(5)
-                    Text("(select an image to view)")
+                    Text("(select an image)")
                         .font(.title2)
                         .foregroundColor(.secondary)
                 }
