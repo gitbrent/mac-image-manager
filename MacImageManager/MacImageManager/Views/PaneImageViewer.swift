@@ -32,7 +32,8 @@ struct PaneImageViewer: View {
                     Image(systemName: "photo.on.rectangle")
                         .font(.system(size: 64))
                         .foregroundColor(.secondary)
-                    Text("Select an image to view")
+                        .padding(5)
+                    Text("(select an image to view)")
                         .font(.title2)
                         .foregroundColor(.secondary)
                 }
@@ -61,12 +62,12 @@ struct PaneImageViewer: View {
     }
 }
 
-#Preview("Empty State") {
+#Preview("No Selection") {
     PaneImageViewer(selectedImage: nil)
         .frame(width: 300, height: 400)
 }
 
-#Preview("With Image") {
+#Preview("Image Selected") {
     PaneImageViewer(
         selectedImage: Bundle.main.resourceURL?.appendingPathComponent("preview1.png")
     )
