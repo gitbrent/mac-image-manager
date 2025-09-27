@@ -69,7 +69,8 @@ struct PaneImageViewer: View {
 
 #Preview("Image Selected") {
     PaneImageViewer(
-        selectedImage: Bundle.main.resourceURL?.appendingPathComponent("preview1.png")
+        selectedImage: URL(fileURLWithPath: "/tmp/image1.png")
+        //selectedImage: Bundle.main.resourceURL?.appendingPathComponent("preview1.png")
     )
     .frame(width: 300, height: 400)
 }
