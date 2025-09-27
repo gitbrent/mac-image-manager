@@ -8,32 +8,30 @@
 import Foundation
 
 #if DEBUG
-class PreviewBrowserModel: BrowserModel {
-     var mockDirectories: Set<String> = []
-
-    override func isDirectory(_ url: URL) -> Bool {
-        //print("[DEBUG] isDirectory:", url)
-        return mockDirectories.contains(url.lastPathComponent)
-    }
-}
-
 extension BrowserModel {
     static var preview: BrowserModel {
-        //let model = BrowserModel() // NOTE: Previews work (ContentView, PaneFileBrow)
-        let model = PreviewBrowserModel()
+        let model = BrowserModel()
 
-        // Create URLs in the app's bundle that point to our preview assets
-        if let bundleURL = Bundle.main.resourceURL {
-            let previewURLs = [
-                bundleURL.appendingPathComponent("preview1.png"),
-                bundleURL.appendingPathComponent("preview2.png"),
-                bundleURL.appendingPathComponent("PreviewFolder")
-            ]
-            model.items = previewURLs
+        // Create a mix of different file types for testing
+        let now = Date()
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
+        let lastWeek = Calendar.current.date(byAdding: .day, value: -7, to: now)!
 
-            // Mark which items should be treated as directories
-            model.mockDirectories = ["PreviewFolder"]
-        }
+        model.items = [
+            // Folders
+            FileItem(url: URL(fileURLWithPath: "/tmp/Photos"), name: "Photos", iconName: "folder.fill", isDirectory: true, fileSize: 0, modificationDate: now),
+            FileItem(url: URL(fileURLWithPath: "/tmp/Archive"), name: "Archive", iconName: "folder.fill", isDirectory: true, fileSize: 0, modificationDate: lastWeek),
+
+            // Images with different formats
+            FileItem(url: URL(fileURLWithPath: "/tmp/vacation.jpg"), name: "vacation.jpg", iconName: "photo", isDirectory: false, fileSize: 2_500_000, modificationDate: now),
+            FileItem(url: URL(fileURLWithPath: "/tmp/screenshot.png"), name: "screenshot.png", iconName: "photo", isDirectory: false, fileSize: 1_200_000, modificationDate: yesterday),
+            FileItem(url: URL(fileURLWithPath: "/tmp/animation.gif"), name: "animation.gif", iconName: "photo", isDirectory: false, fileSize: 500_000, modificationDate: lastWeek),
+            FileItem(url: URL(fileURLWithPath: "/tmp/profile.heic"), name: "profile.heic", iconName: "photo", isDirectory: false, fileSize: 3_000_000, modificationDate: now),
+
+            // Non-image files for testing filtering
+            FileItem(url: URL(fileURLWithPath: "/tmp/document.pdf"), name: "document.pdf", iconName: "doc", isDirectory: false, fileSize: 150_000, modificationDate: yesterday),
+            FileItem(url: URL(fileURLWithPath: "/tmp/notes.txt"), name: "notes.txt", iconName: "doc", isDirectory: false, fileSize: 1_024, modificationDate: now)
+        ]
 
         return model
     }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PaneFileBrowserView: View {
     @EnvironmentObject var browserModel: BrowserModel
-    @Binding var selectedImage: URL?
+    @Binding var selectedImage: FileItem?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -18,14 +18,14 @@ struct PaneFileBrowserView: View {
             // 2: divider
             Divider()
             // 3: File list
-            List(browserModel.items, id: \.self, selection: $selectedImage) { item in
-                FileBrowserRowView(url: item)
+            List(browserModel.items, id: \.id, selection: $selectedImage) { item in
+                FileBrowserRowView(item: item)
                     .environmentObject(browserModel)
                     .tag(item)
                     .contentShape(Rectangle())
                     .onTapGesture {
-                        if browserModel.isDirectory(item) {
-                            browserModel.navigateInto(directory: item)
+                        if item.isDirectory {
+                            browserModel.navigateInto(item: item)
                         } else {
                             selectedImage = item
                         }
@@ -63,15 +63,15 @@ struct NavigationHeader: View {
 
 private struct PaneFileBrowserPreviewContainer: View {
     @StateObject private var model = BrowserModel.preview
+    @State private var selectedImage: FileItem?
 
     var body: some View {
-        PaneFileBrowserView(selectedImage: .constant(nil))
+        PaneFileBrowserView(selectedImage: $selectedImage)
             .environmentObject(model)
     }
 }
 
 #Preview {
     PaneFileBrowserPreviewContainer()
-        .environmentObject(BrowserModel.preview)
         .frame(width: 300, height: 400)
 }

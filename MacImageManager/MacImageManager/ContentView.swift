@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     // 1. Use EnvironmentObject to access the shared model
     @EnvironmentObject private var browserModel: BrowserModel
-    @State private var selectedImage: URL?
+    @State private var selectedImage: FileItem?
 
     var body: some View {
         HSplitView {
@@ -20,7 +20,7 @@ struct ContentView: View {
                 .frame(minWidth: 200, maxWidth: 400)
 
             // Right pane - Image viewer
-            PaneImageViewer(selectedImage: selectedImage)
+            PaneImageViewer(selectedImage: selectedImage?.url)
                 .frame(minWidth: 400)
         }
         .fileImporter(
@@ -29,9 +29,19 @@ struct ContentView: View {
             allowsMultipleSelection: false
         ) { result in
             do {
-                let url = try result.get()
-                if url.count > 0 {
-                    browserModel.navigateInto(directory: url[0])
+                let urls = try result.get()
+                if urls.count > 0 {
+                    // Create a temporary FileItem for the imported folder
+                    let folderUrl = urls[0]
+                    let folderItem = FileItem(
+                        url: folderUrl,
+                        name: folderUrl.lastPathComponent,
+                        iconName: "folder.fill",
+                        isDirectory: true,
+                        fileSize: 0,
+                        modificationDate: Date()
+                    )
+                    browserModel.navigateInto(item: folderItem)
                 }
             } catch {
                 print("Failed to import folder: \(error.localizedDescription)")

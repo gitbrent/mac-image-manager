@@ -8,20 +8,20 @@
 import SwiftUI
 
 struct FileBrowserRowView: View {
-    let url: URL
+    let item: FileItem
     @EnvironmentObject var browserModel: BrowserModel
 
     var body: some View {
         HStack {
-            Image(systemName: browserModel.isDirectory(url) ? "folder.fill" : "photo")
+            Image(systemName: item.iconName)
                 .font(.system(size: 24))
-                .foregroundColor(browserModel.isDirectory(url) ? .blue : .orange)
+                .foregroundColor(item.isDirectory ? .blue : .orange)
                 .frame(width: 32, height: 32)
 
             VStack(alignment: .leading) {
-                Text(url.lastPathComponent)
+                Text(item.name)
                     .lineLimit(1)
-                Text(url.path)
+                Text(item.url.path)
                     .lineLimit(1)
                     .foregroundColor(.gray)
             }
@@ -30,10 +30,10 @@ struct FileBrowserRowView: View {
         }
         .padding(.vertical, 2)
         .contextMenu {
-            Button(browserModel.isDirectory(url) ? "Rename Folder" : "Rename Image") {
-                if browserModel.isDirectory(url) {
+            Button(item.isDirectory ? "Rename Folder" : "Rename File") {
+                if item.isDirectory {
                     print("TODO: Rename directory functionality")
-                    //browserModel.navigateInto(directory: url)
+                    //browserModel.navigateInto(item: item)
                 } else {
                     print("TODO: Rename file functionality")
                     // This could be a new method in your model or a simple action here
@@ -89,12 +89,22 @@ private struct FileBrowserRowViewPreviewContainer: View {
     @StateObject private var model = BrowserModel.preview
 
     var body: some View {
-        FileBrowserRowView(url: model.items.first!)
-            .environmentObject(model)
+        VStack(spacing: 20) {
+            // Preview a folder
+            FileBrowserRowView(item: model.items.first { $0.isDirectory }!)
+
+            // Preview an image
+            FileBrowserRowView(item: model.items.first { model.isImageFile($0) }!)
+
+            // Preview a document
+            FileBrowserRowView(item: model.items.first { !$0.isDirectory && !model.isImageFile($0) }!)
+        }
+        .environmentObject(model)
+        .padding()
     }
 }
 
 #Preview {
     FileBrowserRowViewPreviewContainer()
-        .frame(width: 300, height: 400)
+        .frame(width: 300)
 }

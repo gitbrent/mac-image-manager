@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 internal import Combine
 
 class BrowserModel: ObservableObject {
-    @Published var items: [URL] = []
+    @Published var items: [FileItem] = []
     @Published var currentDirectory: URL
     @Published var canNavigateUp: Bool = false
     @Published var showingFileImporter: Bool = false
@@ -56,7 +56,7 @@ class BrowserModel: ObservableObject {
     }
 
     var imageCount: Int {
-        items.filter { !isDirectory($0) }.count
+        items.filter { isImageFile($0) }.count
     }
 
     func loadInitialDirectory() {
@@ -81,12 +81,11 @@ class BrowserModel: ObservableObject {
         do {
             let contents = try fileManager.contentsOfDirectory(
                 at: currentDirectory,
-                includingPropertiesForKeys: [.isDirectoryKey, .isReadableKey],
+                includingPropertiesForKeys: [.isDirectoryKey, .isReadableKey, .fileSizeKey, .contentModificationDateKey],
                 options: [.skipsHiddenFiles]
             )
 
-            var directories: [URL] = []
-            var images: [URL] = []
+            var fileItems: [FileItem] = []
 
             for url in contents {
                 // Skip items we can't read
@@ -96,23 +95,36 @@ class BrowserModel: ObservableObject {
                     continue
                 }
 
-                if isDirectory(url) {
-                    directories.append(url)
-                } else if isImageFile(url) {
-                    images.append(url)
+                let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
+
+                let isDir = resourceValues.isDirectory ?? false
+                let fileSize = resourceValues.fileSize ?? 0
+                let modDate = resourceValues.contentModificationDate ?? Date()
+
+                // 💡 Determine the icon name based on file type
+                let iconName: String
+                if isDir {
+                    iconName = "folder.fill"
+                } else {
+                    let ext = url.pathExtension.lowercased()
+                    iconName = imageTypes.contains(ext) ? "photo" : "doc"
                 }
+
+                // 💡 Create the new FileItem object
+                let fileItem = FileItem(url: url, name: url.lastPathComponent, iconName: iconName, isDirectory: isDir, fileSize: fileSize, modificationDate: modDate)
+
+                fileItems.append(fileItem)
             }
 
-            // Sort directories and images separately, then combine
-            directories.sort { $0.lastPathComponent.localizedCaseInsensitiveCompare($1.lastPathComponent) == .orderedAscending }
-            images.sort { $0.lastPathComponent.localizedCaseInsensitiveCompare($1.lastPathComponent) == .orderedAscending }
+            // Sort file items
+            fileItems.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
-            self.items = directories + images
-            print("Loaded \(directories.count) directories and \(images.count) images")
+            // Set items
+            self.items = fileItems
+            print("Loaded \(items.count) items.")
 
-            // Update navigation state
+            // LAST:
             updateNavigationState()
-
         } catch {
             print("Error loading directory: \(error)")
             print("Current directory path: \(currentDirectory.path)")
@@ -130,61 +142,40 @@ class BrowserModel: ObservableObject {
         }
     }
 
-    func navigateInto(directory: URL) {
-        guard isDirectory(directory) else {
-            print("Not a directory: \(directory.path)")
+    func navigateInto(item: FileItem) {
+        guard item.isDirectory else {
+            print("Not a directory: \(item.url.path)")
             return
         }
 
         // Check if we can actually read this directory before navigating
         var isDirFlag: ObjCBool = false
-        guard fileManager.fileExists(atPath: directory.path, isDirectory: &isDirFlag),
+        guard fileManager.fileExists(atPath: item.url.path, isDirectory: &isDirFlag),
               isDirFlag.boolValue else {
-            print("Directory doesn't exist or isn't accessible: \(directory.path)")
+            print("Directory doesn't exist or isn't accessible: \(item.url.path)")
             return
         }
 
         // Test if we can read the directory
         do {
-            _ = try fileManager.contentsOfDirectory(at: directory, includingPropertiesForKeys: nil, options: [])
-            print("Navigating into: \(directory.path)")
-            currentDirectory = directory
+            _ = try fileManager.contentsOfDirectory(at: item.url, includingPropertiesForKeys: nil, options: [])
+            print("Navigating into: \(item.url.path)")
+            currentDirectory = item.url
             loadCurrentDirectory()
         } catch {
-            print("Cannot access directory \(directory.path): \(error)")
+            print("Cannot access directory \(item.url.path): \(error)")
         }
     }
 
-    func isDirectory(_ url: URL) -> Bool {
-        do {
-            let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey])
-            return resourceValues.isDirectory ?? false
-        } catch {
-            return false
-        }
+    func isImageFile(_ item: FileItem) -> Bool {
+        guard !item.isDirectory else { return false }
+        let ext = item.url.pathExtension.lowercased()
+        return imageTypes.contains(ext)
     }
 
-    func openDirectory(_ url: URL) {
-        self.currentDirectory = url
+    func openDirectory(_ item: FileItem) {
+        self.currentDirectory = item.url
         loadCurrentDirectory()
-    }
-
-    private func isImageFile(_ url: URL) -> Bool {
-        let fileExtension = url.pathExtension.lowercased()
-
-        // First check by extension
-        if imageTypes.contains(fileExtension) {
-            return true
-        }
-
-        // Fallback: check UTI (Uniform Type Identifier)
-        if #available(macOS 11.0, *) {
-            if let uti = UTType(filenameExtension: fileExtension) {
-                return uti.conforms(to: .image)
-            }
-        }
-
-        return false
     }
 
     private func updateNavigationState() {
@@ -194,31 +185,31 @@ class BrowserModel: ObservableObject {
     }
 
     // Convenience method for keyboard navigation
-    func selectNextImage(after currentURL: URL?) -> URL? {
-        let imageURLs = items.filter { !isDirectory($0) }
+    func selectNextImage(after currentItem: FileItem?) -> FileItem? {
+        let imageItems = items.filter { !$0.isDirectory }
 
-        guard !imageURLs.isEmpty else { return nil }
+        guard !imageItems.isEmpty else { return nil }
 
-        if let currentURL = currentURL,
-           let currentIndex = imageURLs.firstIndex(of: currentURL),
-           currentIndex + 1 < imageURLs.count {
-            return imageURLs[currentIndex + 1]
+        if let currentItem = currentItem,
+           let currentIndex = imageItems.firstIndex(where: { $0.url == currentItem.url }),
+           currentIndex + 1 < imageItems.count {
+            return imageItems[currentIndex + 1]
         }
 
-        return imageURLs.first
+        return imageItems.first
     }
 
-    func selectPreviousImage(before currentURL: URL?) -> URL? {
-        let imageURLs = items.filter { !isDirectory($0) }
+    func selectPreviousImage(before currentItem: FileItem?) -> FileItem? {
+        let imageItems = items.filter { !$0.isDirectory }
 
-        guard !imageURLs.isEmpty else { return nil }
+        guard !imageItems.isEmpty else { return nil }
 
-        if let currentURL = currentURL,
-           let currentIndex = imageURLs.firstIndex(of: currentURL),
+        if let currentItem = currentItem,
+           let currentIndex = imageItems.firstIndex(where: { $0.url == currentItem.url }),
            currentIndex > 0 {
-            return imageURLs[currentIndex - 1]
+            return imageItems[currentIndex - 1]
         }
 
-        return imageURLs.last
+        return imageItems.last
     }
 }
