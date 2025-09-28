@@ -57,5 +57,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(BrowserModel.preview)
-        .frame(width: 600, height: 400)
+        .frame(width: 600, height: 500)
 }

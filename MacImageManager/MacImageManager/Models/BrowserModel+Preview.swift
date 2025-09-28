@@ -26,6 +26,7 @@ extension BrowserModel {
             FileItem(url: URL(fileURLWithPath: "/tmp/screenshot.png"), name: "screenshot.png", iconName: "photo", isDirectory: false, fileSize: 1_200_000, modificationDate: yesterday, uti: .png),
             FileItem(url: URL(fileURLWithPath: "/tmp/animation.gif"), name: "animation.gif", iconName: "photo", isDirectory: false, fileSize: 500_000, modificationDate: lastWeek, uti: .gif),
             FileItem(url: URL(fileURLWithPath: "/tmp/profile.heic"), name: "profile.heic", iconName: "photo", isDirectory: false, fileSize: 3_000_000, modificationDate: now, uti: .heic),
+            FileItem(url: URL(fileURLWithPath: "/tmp/zipline.mp4"), name: "zipline.mp4", iconName: "film", isDirectory: false, fileSize: 55_100_000, modificationDate: now, uti: .mpeg4Movie),
 
             // Non-image files for testing filtering
             FileItem(url: URL(fileURLWithPath: "/tmp/document.pdf"), name: "document.pdf", iconName: "doc", isDirectory: false, fileSize: 150_000, modificationDate: yesterday, uti: .pdf),
