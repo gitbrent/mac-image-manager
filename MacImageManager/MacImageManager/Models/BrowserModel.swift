@@ -16,19 +16,11 @@ class BrowserModel: ObservableObject {
     @Published var canNavigateUp: Bool = false
     @Published var showingFileImporter: Bool = false
 
+    // Caches to speed up metadata/icon recomputation in large directories
+    private var fileItemCache: [URL: FileItem] = [:]
+    private var iconNameCache: [String: String] = [:] // key: UTI identifier
+
     private let fileManager = FileManager.default
-    private let imageTypes: Set<String> = {
-        var types = Set<String>()
-
-        // Common image extensions
-        let extensions = ["jpg", "jpeg", "png", "gif", "bmp", "tiff", "tif", "heic", "heif", "webp", "svg", "ico"]
-
-        for ext in extensions {
-            types.insert(ext.lowercased())
-        }
-
-        return types
-    }()
 
     init() {
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
@@ -89,35 +81,40 @@ class BrowserModel: ObservableObject {
                 let iconName: String
                 if isDir {
                     iconName = "folder.fill"
-                } else if uti?.conforms(to: UTType.image) ?? false {
-                    iconName = "photo"
-                } else if uti?.conforms(to: UTType.movie) ?? false {
-                    iconName = "film"
-                } else if uti?.conforms(to: UTType.text) ?? false {
-                    iconName = "doc.text"
-                } else if uti?.conforms(to: UTType.sourceCode) ?? false {
-                    iconName = "doc.text.fill"
                 } else {
-                    iconName = "doc"
+                    iconName = self.iconName(for: uti)
                 }
-                
-                let fileItem = FileItem(
-                    url: url,
-                    name: url.lastPathComponent,
-                    iconName: iconName,
-                    isDirectory: isDir,
-                    fileSize: fileSize,
-                    modificationDate: modDate,
-                    uti: uti,
-                    isAnimatedGif: isAnimatedGif,
-                    isVideo: isVideo
-                )
-                fileItems.append(fileItem)
+
+                // Reuse cached FileItem when unchanged to avoid recomputing
+                if let cached = fileItemCache[url],
+                   cached.isDirectory == isDir,
+                   cached.fileSize == fileSize,
+                   cached.modificationDate == modDate,
+                   cached.uti == uti {
+                    fileItems.append(cached)
+                } else {
+                    let fileItem = FileItem(
+                        url: url,
+                        name: url.lastPathComponent,
+                        iconName: iconName,
+                        isDirectory: isDir,
+                        fileSize: fileSize,
+                        modificationDate: modDate,
+                        uti: uti,
+                        isAnimatedGif: isAnimatedGif,
+                        isVideo: isVideo
+                    )
+                    fileItems.append(fileItem)
+                    fileItemCache[url] = fileItem
+                }
             }
 
             fileItems.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
             self.items = fileItems
+            // Prune cache to current directory entries to bound memory usage
+            let currentURLs = Set(fileItems.map { $0.url })
+            fileItemCache = fileItemCache.filter { currentURLs.contains($0.key) }
             print("Loaded \(items.count) items.")
 
             updateNavigationState()
@@ -165,13 +162,44 @@ class BrowserModel: ObservableObject {
 
     func isImageFile(_ item: FileItem) -> Bool {
         guard !item.isDirectory else { return false }
-        let ext = item.url.pathExtension.lowercased()
-        return imageTypes.contains(ext)
+
+        // Prefer the UTI from metadata; if missing, derive from the filename extension
+        let type = item.uti ?? UTType(filenameExtension: item.url.pathExtension.lowercased())
+
+        if let type {
+            return type.conforms(to: .rawImage) || type.conforms(to: .image)
+        }
+
+        return false
     }
 
     func openDirectory(_ item: FileItem) {
         self.currentDirectory = item.url
         loadCurrentDirectory()
+    }
+
+    // Returns an SF Symbol name for a given UTI, with simple caching
+    private func iconName(for uti: UTType?) -> String {
+        guard let uti = uti else { return "doc" }
+        let key = uti.identifier
+        if let cached = iconNameCache[key] {
+            return cached
+        }
+
+        let name: String
+        if uti.conforms(to: UTType.rawImage) || uti.conforms(to: UTType.image) {
+            name = "photo"
+        } else if uti.conforms(to: UTType.movie) {
+            name = "film"
+        } else if uti.conforms(to: UTType.text) {
+            name = "doc.text"
+        } else if uti.conforms(to: UTType.sourceCode) {
+            name = "doc.text.fill"
+        } else {
+            name = "doc"
+        }
+        iconNameCache[key] = name
+        return name
     }
 
     private func updateNavigationState() {
