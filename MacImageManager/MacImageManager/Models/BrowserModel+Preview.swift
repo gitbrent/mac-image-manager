@@ -53,7 +53,8 @@ extension BrowserModel {
                 isDirectory: false,
                 fileSize: 2_500_000,
                 modificationDate: now,
-                uti: .jpeg)
+                uti: .jpeg
+             )
 
             async let lockItem = FileItem(
                 url: URL(fileURLWithPath: "/tmp/lock.svg"),
