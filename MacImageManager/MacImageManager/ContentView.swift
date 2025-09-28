@@ -23,10 +23,10 @@ struct ContentView: View {
                     .frame(minWidth: 250)
             case .animatedGif:
                 PaneGifViewer(gifUrl: file.url)
-                    .frame(minWidth: 250)
+                    .frame(minWidth: 250, maxHeight: .infinity)
             case .video:
                 PaneVideoViewer(videoUrl: file.url)
-                    .frame(minWidth: 250)
+                    .frame(minWidth: 250, maxHeight: .infinity)
             case .directory, .unknown:
                 // Show placeholder for unsupported types
                 VStack {

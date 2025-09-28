@@ -26,8 +26,11 @@ struct PaneVideoViewer: View {
             if let videoUrl = videoUrl {
                 VStack {
                     // Video Player
-                    VideoPlayer(player: player)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    ScrollView([.horizontal, .vertical]) {
+                        VideoPlayer(player: player)
+                            .containerRelativeFrame([.horizontal, .vertical])
+                            .background(Color.black)
+                    }
 
                     // Custom Controls
                     VStack {

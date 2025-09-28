@@ -48,10 +48,12 @@ struct PaneGifViewer: View {
                 VStack {
                     // GIF Display
                     if let currentFrame = currentFrame {
-                        Image(nsImage: currentFrame)
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        ScrollView([.horizontal, .vertical]) {
+                            Image(nsImage: currentFrame)
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .containerRelativeFrame([.horizontal, .vertical])
+                        }
                     } else {
                         ProgressView("Loading GIF...")
                     }
