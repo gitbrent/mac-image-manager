@@ -26,7 +26,14 @@ struct FileBrowserRowView: View {
                     .foregroundColor(.gray)
             }
 
-            Spacer()
+            Spacer() // NOTE: push content left
+
+            if !item.isDirectory {
+                Text(item.formattedFileSize)
+                    .frame(minWidth: 70, alignment: .trailing)
+                    .foregroundColor(.gray)
+                    .font(.system(size: 12))
+            }
         }
         .padding(.vertical, 2)
         .contextMenu {
@@ -53,58 +60,8 @@ struct FileBrowserRowView: View {
     }
 }
 
-/*
-struct FileRowView_Previews: PreviewProvider {
-    static var previews: some View {
-        FileBrowserRowView(
-            url: URL(fileURLWithPath: "/tmp/preview.png"),
-            browserModel: BrowserModel.preview
-        )
-        .padding()
-    }
-}
-*/
-/*
 #Preview {
-    Group {
-        // Preview an image row
-        FileBrowserRowView(
-            url: Bundle.main.resourceURL!.appendingPathComponent("preview1.png"),
-            browserModel: BrowserModel.preview
-        )
-
-        // Preview a folder row
-        FileBrowserRowView(
-            url: FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0],
-            browserModel: BrowserModel.preview
-        )
-    }
-    .padding()
-}
-*/
-
-/// ====================
-
-private struct FileBrowserRowViewPreviewContainer: View {
-    @StateObject private var model = BrowserModel.preview
-
-    var body: some View {
-        VStack(spacing: 20) {
-            // Preview a folder
-            FileBrowserRowView(item: model.items.first { $0.isDirectory }!)
-
-            // Preview an image
-            FileBrowserRowView(item: model.items.first { model.isImageFile($0) }!)
-
-            // Preview a document
-            FileBrowserRowView(item: model.items.first { !$0.isDirectory && !model.isImageFile($0) }!)
-        }
-        .environmentObject(model)
-        .padding()
-    }
-}
-
-#Preview {
-    FileBrowserRowViewPreviewContainer()
+    FileBrowserRowView(item: BrowserModel.preview.items.first!)
+        .environmentObject(BrowserModel.preview)
         .frame(width: 300)
 }
