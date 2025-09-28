@@ -180,23 +180,29 @@ class BrowserModel: ObservableObject {
 
     // Returns an SF Symbol name for a given UTI, with simple caching
     private func iconName(for uti: UTType?) -> String {
-        guard let uti = uti else { return "doc" }
+        guard let uti = uti else { return "photo" }
         let key = uti.identifier
         if let cached = iconNameCache[key] {
             return cached
         }
 
         let name: String
-        if uti.conforms(to: UTType.rawImage) || uti.conforms(to: UTType.image) {
+        if uti == .livePhoto {
+            name = "livephoto"
+        } else if uti.conforms(to: .gif) {
+            name = "rectangle.stack.badge.play"
+        } else if uti == .svg {
+            name = "square.on.square.squareshape.controlhandles"
+        } else if uti.conforms(to: .rawImage) {
+            name = "camera.aperture"
+        } else if uti == .heic || uti == .heif {
+            name = "photo"
+        } else if uti.conforms(to: UTType.rawImage) || uti.conforms(to: UTType.image) {
             name = "photo"
         } else if uti.conforms(to: UTType.movie) {
             name = "film"
-        } else if uti.conforms(to: UTType.text) {
-            name = "doc.text"
-        } else if uti.conforms(to: UTType.sourceCode) {
-            name = "doc.text.fill"
         } else {
-            name = "doc"
+            name = "questionmark.square.dashed"
         }
         iconNameCache[key] = name
         return name
