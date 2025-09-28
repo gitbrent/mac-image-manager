@@ -19,6 +19,8 @@ struct FileItem: Identifiable, Hashable {
     let fileSize: Int
     let modificationDate: Date
     let uti: UTType?
+    let isAnimatedGif: Bool
+    let isVideo: Bool
 
     var formattedFileSize: String {
         if fileSize < 1024 {

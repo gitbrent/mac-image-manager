@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
-internal import Combine
+import Combine
 
 class BrowserModel: ObservableObject {
     @Published var items: [FileItem] = []
@@ -79,27 +79,39 @@ class BrowserModel: ObservableObject {
                 // GUARD: Check if the file is readable.
                 guard resourceValues.isReadable ?? false else { continue }
                 
+                let uti = resourceValues.contentType
                 let isDir = resourceValues.isDirectory ?? false
+                let isAnimatedGif = uti?.conforms(to: UTType.gif) ?? false
+                let isVideo = uti?.conforms(to: UTType.movie) ?? false
                 let fileSize = resourceValues.fileSize ?? 0
                 let modDate = resourceValues.contentModificationDate ?? Date()
-                let uti = resourceValues.contentType
 
                 let iconName: String
                 if isDir {
                     iconName = "folder.fill"
-                } else if uti?.conforms(to: .image) ?? false {
+                } else if uti?.conforms(to: UTType.image) ?? false {
                     iconName = "photo"
-                } else if uti?.conforms(to: .movie) ?? false {
+                } else if uti?.conforms(to: UTType.movie) ?? false {
                     iconName = "film"
-                } else if uti?.conforms(to: .text) ?? false {
+                } else if uti?.conforms(to: UTType.text) ?? false {
                     iconName = "doc.text"
-                } else if uti?.conforms(to: .sourceCode) ?? false {
+                } else if uti?.conforms(to: UTType.sourceCode) ?? false {
                     iconName = "doc.text.fill"
                 } else {
                     iconName = "doc"
                 }
-
-                let fileItem = FileItem(url: url, name: url.lastPathComponent, iconName: iconName, isDirectory: isDir, fileSize: fileSize, modificationDate: modDate, uti: uti)
+                
+                let fileItem = FileItem(
+                    url: url,
+                    name: url.lastPathComponent,
+                    iconName: iconName,
+                    isDirectory: isDir,
+                    fileSize: fileSize,
+                    modificationDate: modDate,
+                    uti: uti,
+                    isAnimatedGif: isAnimatedGif,
+                    isVideo: isVideo
+                )
                 fileItems.append(fileItem)
             }
 
@@ -197,3 +209,4 @@ class BrowserModel: ObservableObject {
         return imageItems.last
     }
 }
+

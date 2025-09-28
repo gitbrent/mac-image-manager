@@ -40,7 +40,9 @@ struct ContentView: View {
                         isDirectory: true,
                         fileSize: 0,
                         modificationDate: Date(),
-                        uti: .folder
+                        uti: .folder,
+                        isAnimatedGif: false,
+                        isVideo: false
                     )
                     browserModel.navigateInto(item: folderItem)
                 }
