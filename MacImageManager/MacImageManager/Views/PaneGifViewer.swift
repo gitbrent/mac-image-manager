@@ -103,14 +103,12 @@ struct PaneGifViewer: View {
                 .background(Color(NSColor.controlBackgroundColor))
             }
         }
-        .onAppear {
+        .task(id: gifUrl) {
+            loadGif(from: gifUrl)
             startAnimation()
         }
         .onDisappear {
             stopAnimation()
-        }
-        .onChange(of: gifUrl) { oldValue, newValue in
-            loadGif(from: newValue)
         }
         .onChange(of: animationSpeed) { oldValue, newValue in
             if isPlaying {
