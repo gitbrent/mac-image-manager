@@ -18,4 +18,20 @@ struct FileItem: Identifiable, Hashable {
     let isDirectory: Bool
     let fileSize: Int
     let modificationDate: Date
+
+    var formattedFileSize: String {
+        if fileSize < 1024 {
+            return "\(fileSize) B"
+        }
+        let kb = Double(fileSize) / 1024.0
+        if kb < 1024 {
+            return String(format: "%.1f KB", kb)
+        }
+        let mb = kb / 1024.0
+        if mb < 1024 {
+            return String(format: "%.1f MB", mb)
+        }
+        let gb = mb / 1024.0
+        return String(format: "%.2f GB", gb)
+    }
 }
