@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct FileBrowserRowView: View {
-    let item: FileItem
     @EnvironmentObject var browserModel: BrowserModel
+    let item: FileItem
 
     var body: some View {
         HStack {

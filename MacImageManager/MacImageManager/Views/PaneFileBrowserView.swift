@@ -26,10 +26,11 @@ struct PaneFileBrowserView: View {
                     .onTapGesture {
                         if item.isDirectory {
                             browserModel.navigateInto(item: item)
-                        } else {
+                        } else if !item.isVideo && !item.isAnimatedGif {
                             selectedImage = item
                         }
                     }
+                    .disabled(item.isVideo || item.isAnimatedGif) // TODO: add support!
             }
         }
     }
