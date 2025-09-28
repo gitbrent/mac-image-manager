@@ -21,7 +21,7 @@ struct ContentView: View {
 
             // Right pane - Image viewer
             PaneImageViewer(selectedImage: selectedImage?.url)
-                //.frame(minWidth: 500) // needed?
+                .frame(minWidth: 250)
         }
         .fileImporter(
             isPresented: $browserModel.showingFileImporter,
@@ -59,5 +59,5 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(BrowserModel.preview)
-        .frame(width: 600, height: 500)
+        .frame(width: 500, height: 500)
 }
