@@ -26,11 +26,10 @@ struct PaneFileBrowserView: View {
                     .onTapGesture {
                         if item.isDirectory {
                             browserModel.navigateInto(item: item)
-                        } else if !item.isVideo && !item.isAnimatedGif {
+                        } else if item.mediaType != .unknown {
                             selectedImage = item
                         }
                     }
-                    .disabled(item.isVideo || item.isAnimatedGif) // TODO: add support!
             }
         }
     }
@@ -53,7 +52,7 @@ struct NavigationHeader: View {
 
             Spacer()
 
-            Text("\(browserModel.imageCount) images")
+            Text("\(browserModel.supportedFileCount) items")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -64,10 +63,10 @@ struct NavigationHeader: View {
 
 private struct PaneFileBrowserPreviewContainer: View {
     @StateObject private var model = BrowserModel.preview
-    @State private var selectedImage: FileItem?
+    @State private var selectedFile: FileItem?
 
     var body: some View {
-        PaneFileBrowserView(selectedImage: $selectedImage)
+        PaneFileBrowserView(selectedImage: $selectedFile)
             .environmentObject(model)
     }
 }

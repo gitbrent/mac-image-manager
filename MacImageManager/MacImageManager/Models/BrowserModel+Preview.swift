@@ -12,23 +12,93 @@ import UniformTypeIdentifiers
 extension BrowserModel {
     static var preview: BrowserModel {
         let model = BrowserModel()
-        let now = Date()
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
-        let lastWeek = Calendar.current.date(byAdding: .day, value: -7, to: now)!
 
-        model.items = [
-            // Folders
-            FileItem(url: URL(fileURLWithPath: "/tmp/Archive"), name: "Archive", iconName: "folder.fill", isDirectory: true, fileSize: 0, modificationDate: lastWeek, uti: .folder, isAnimatedGif: false, isVideo: false),
-            FileItem(url: URL(fileURLWithPath: "/tmp/Photos"), name: "Photos", iconName: "folder.fill", isDirectory: true, fileSize: 0, modificationDate: now, uti: .folder, isAnimatedGif: false, isVideo: false),
+        // Run async initialization in a synchronous context for previews
+        Task { @MainActor in
+            let now = Date()
+            let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
+            let lastWeek = Calendar.current.date(byAdding: .day, value: -7, to: now)!
+
+            // Create items asynchronously
+            async let archiveItem = FileItem(
+                url: URL(fileURLWithPath: "/tmp/Archive"),
+                name: "Archive",
+                isDirectory: true,
+                fileSize: 0,
+                modificationDate: lastWeek,
+                uti: .folder
+            )
+            async let photosItem = FileItem(
+                url: URL(fileURLWithPath: "/tmp/Photos"),
+                name: "Photos",
+                isDirectory: true,
+                fileSize: 0,
+                modificationDate: now,
+                uti: .folder
+            )
 
             // Images with different formats
-            FileItem(url: URL(fileURLWithPath: "/tmp/animation.gif"), name: "animation.gif", iconName: "photo", isDirectory: false, fileSize: 500_000, modificationDate: lastWeek, uti: .gif, isAnimatedGif: true, isVideo: false),
-            FileItem(url: URL(fileURLWithPath: "/tmp/vacation.jpg"), name: "vacation.jpg", iconName: "photo", isDirectory: false, fileSize: 2_500_000, modificationDate: now, uti: .jpeg, isAnimatedGif: false, isVideo: false),
-            FileItem(url: URL(fileURLWithPath: "/tmp/lock.svg"), name: "lock.svg", iconName: "photo", isDirectory: false, fileSize: 200_000, modificationDate: yesterday, uti: .svg, isAnimatedGif: false, isVideo: false),
-            FileItem(url: URL(fileURLWithPath: "/tmp/screenshot.png"), name: "screenshot.png", iconName: "photo", isDirectory: false, fileSize: 1_200_000, modificationDate: yesterday, uti: .png, isAnimatedGif: false, isVideo: false),
-            FileItem(url: URL(fileURLWithPath: "/tmp/profile.heic"), name: "profile.heic", iconName: "photo", isDirectory: false, fileSize: 3_000_000, modificationDate: now, uti: .heic, isAnimatedGif: false, isVideo: false),
-            FileItem(url: URL(fileURLWithPath: "/tmp/zipline.mp4"), name: "zipline.mp4", iconName: "film", isDirectory: false, fileSize: 55_100_000, modificationDate: now, uti: .mpeg4Movie, isAnimatedGif: false, isVideo: true),
-        ]
+            async let animationItem = FileItem(
+                url: URL(fileURLWithPath: "/tmp/animation.gif"),
+                name: "animation.gif",
+                isDirectory: false,
+                fileSize: 500_000,
+                modificationDate: lastWeek,
+                uti: UTType.gif
+            )
+
+            async let vacationItem = FileItem(
+                url: URL(fileURLWithPath: "/tmp/vacation.jpg"),
+                name: "vacation.jpg",
+                isDirectory: false,
+                fileSize: 2_500_000,
+                modificationDate: now,
+                uti: .jpeg)
+
+            async let lockItem = FileItem(
+                url: URL(fileURLWithPath: "/tmp/lock.svg"),
+                name: "lock.svg",
+                isDirectory: false,
+                fileSize: 200_000,
+                modificationDate: yesterday,
+                uti: .svg)
+
+            async let screenshotItem = FileItem(
+                url: URL(fileURLWithPath: "/tmp/screenshot.png"),
+                name: "screenshot.png",
+                isDirectory: false,
+                fileSize: 1_200_000,
+                modificationDate: yesterday,
+                uti: .png)
+
+            async let profileItem = FileItem(
+                url: URL(fileURLWithPath: "/tmp/profile.heic"),
+                name: "profile.heic",
+                isDirectory: false,
+                fileSize: 3_000_000,
+                modificationDate: now,
+                uti: .heic)
+
+            async let ziplineItem = FileItem(
+                url: URL(fileURLWithPath: "/tmp/zipline.mp4"),
+                name: "zipline.mp4",
+                isDirectory: false,
+                fileSize: 55_100_000,
+                modificationDate: now,
+                uti: .mpeg4Movie)
+
+            // Wait for all items to be created and add them to the model
+            model.items = await [
+                archiveItem,
+                photosItem,
+                animationItem,
+                vacationItem,
+                lockItem,
+                screenshotItem,
+                profileItem,
+                ziplineItem
+            ]
+        }
 
         return model
     }

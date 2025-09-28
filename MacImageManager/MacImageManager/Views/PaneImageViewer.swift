@@ -41,14 +41,20 @@ struct PaneImageViewer: View {
                 .background(Color(NSColor.controlBackgroundColor))
             }
         }
-        .onChange(of: selectedImage) { oldValue, newValue in
-            loadImage(from: newValue)
+        // Load when the view appears and whenever the selectedImage changes.
+        // .task(id:) runs initially and on every change of the id, so it
+        // covers both the initial-selection case and subsequent changes.
+        .task(id: selectedImage) {
+            loadImage(from: selectedImage)
         }
     }
 
     private func loadImage(from url: URL?) {
-        // Clear current image immediately to show loading state
-        loadedImage = nil
+        // Clear current image immediately to show loading state.
+        // Ensure state changes happen on the main actor.
+        DispatchQueue.main.async {
+            self.loadedImage = nil
+        }
 
         guard let url = url else { return }
 
