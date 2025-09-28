@@ -47,10 +47,10 @@ struct PaneImageViewer: View {
     }
 
     private func loadImage(from url: URL?) {
-        guard let url = url else {
-            loadedImage = nil
-            return
-        }
+        // Clear current image immediately to show loading state
+        loadedImage = nil
+
+        guard let url = url else { return }
 
         DispatchQueue.global(qos: .userInitiated).async {
             if let image = NSImage(contentsOf: url) {
@@ -70,7 +70,6 @@ struct PaneImageViewer: View {
 #Preview("Image Selected") {
     PaneImageViewer(
         selectedImage: URL(fileURLWithPath: "/tmp/image1.png")
-        //selectedImage: Bundle.main.resourceURL?.appendingPathComponent("preview1.png")
     )
     .frame(width: 300, height: 400)
 }
