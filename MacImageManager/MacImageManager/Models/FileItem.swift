@@ -7,8 +7,8 @@
 
 import Foundation
 import UniformTypeIdentifiers
-
-// TODO: add `fileType` (e.g., GIF, Image, Video)
+// NOTE: this is the standard macOS method for identifying file types
+// ....: and is much more reliable than just checking the file extension.
 
 struct FileItem: Identifiable, Hashable {
     let id = UUID()
@@ -18,6 +18,7 @@ struct FileItem: Identifiable, Hashable {
     let isDirectory: Bool
     let fileSize: Int
     let modificationDate: Date
+    let uti: UTType?
 
     var formattedFileSize: String {
         if fileSize < 1024 {

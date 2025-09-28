@@ -64,70 +64,54 @@ class BrowserModel: ObservableObject {
     }
 
     func loadCurrentDirectory() {
-        // First verify the directory exists and is accessible
-        var isDirFlag: ObjCBool = false
-        guard fileManager.fileExists(atPath: currentDirectory.path, isDirectory: &isDirFlag),
-              isDirFlag.boolValue else {
-            print("Directory doesn't exist or isn't accessible: \(currentDirectory.path)")
-            // Fall back to home directory
-            currentDirectory = fileManager.homeDirectoryForCurrentUser
-            updateNavigationState()
-            loadCurrentDirectory()
-            return
-        }
-
-        print("Loading directory: \(currentDirectory.path)")
-
         do {
             let contents = try fileManager.contentsOfDirectory(
                 at: currentDirectory,
-                includingPropertiesForKeys: [.isDirectoryKey, .isReadableKey, .fileSizeKey, .contentModificationDateKey],
+                includingPropertiesForKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .isReadableKey, .contentTypeKey],
                 options: [.skipsHiddenFiles]
             )
 
             var fileItems: [FileItem] = []
 
             for url in contents {
-                // Skip items we can't read
-                if let resourceValues = try? url.resourceValues(forKeys: [.isReadableKey]),
-                   let isReadable = resourceValues.isReadable,
-                   !isReadable {
-                    continue
-                }
-
-                let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey])
-
+                let resourceValues = try url.resourceValues(forKeys: [.isDirectoryKey, .fileSizeKey, .contentModificationDateKey, .isReadableKey, .contentTypeKey])
+                
+                // GUARD: Check if the file is readable.
+                guard resourceValues.isReadable ?? false else { continue }
+                
                 let isDir = resourceValues.isDirectory ?? false
                 let fileSize = resourceValues.fileSize ?? 0
                 let modDate = resourceValues.contentModificationDate ?? Date()
+                let uti = resourceValues.contentType
 
-                // 💡 Determine the icon name based on file type
                 let iconName: String
                 if isDir {
                     iconName = "folder.fill"
+                } else if uti?.conforms(to: .image) ?? false {
+                    iconName = "photo"
+                } else if uti?.conforms(to: .movie) ?? false {
+                    iconName = "film"
+                } else if uti?.conforms(to: .text) ?? false {
+                    iconName = "doc.text"
+                } else if uti?.conforms(to: .sourceCode) ?? false {
+                    iconName = "doc.text.fill"
                 } else {
-                    let ext = url.pathExtension.lowercased()
-                    iconName = imageTypes.contains(ext) ? "photo" : "doc"
+                    iconName = "doc"
                 }
 
-                // 💡 Create the new FileItem object
-                let fileItem = FileItem(url: url, name: url.lastPathComponent, iconName: iconName, isDirectory: isDir, fileSize: fileSize, modificationDate: modDate)
-
+                let fileItem = FileItem(url: url, name: url.lastPathComponent, iconName: iconName, isDirectory: isDir, fileSize: fileSize, modificationDate: modDate, uti: uti)
                 fileItems.append(fileItem)
             }
 
-            // Sort file items
             fileItems.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
-            // Set items
             self.items = fileItems
             print("Loaded \(items.count) items.")
 
-            // LAST:
             updateNavigationState()
+
         } catch {
             print("Error loading directory: \(error)")
-            print("Current directory path: \(currentDirectory.path)")
             self.items = []
         }
     }

@@ -6,31 +6,31 @@
 //
 
 import Foundation
+import UniformTypeIdentifiers
 
 #if DEBUG
 extension BrowserModel {
     static var preview: BrowserModel {
         let model = BrowserModel()
-
-        // Create a mix of different file types for testing
         let now = Date()
         let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: now)!
         let lastWeek = Calendar.current.date(byAdding: .day, value: -7, to: now)!
 
         model.items = [
             // Folders
-            FileItem(url: URL(fileURLWithPath: "/tmp/Photos"), name: "Photos", iconName: "folder.fill", isDirectory: true, fileSize: 0, modificationDate: now),
-            FileItem(url: URL(fileURLWithPath: "/tmp/Archive"), name: "Archive", iconName: "folder.fill", isDirectory: true, fileSize: 0, modificationDate: lastWeek),
+            FileItem(url: URL(fileURLWithPath: "/tmp/Photos"), name: "Photos", iconName: "folder.fill", isDirectory: true, fileSize: 0, modificationDate: now, uti: .folder),
+            FileItem(url: URL(fileURLWithPath: "/tmp/Archive"), name: "Archive", iconName: "folder.fill", isDirectory: true, fileSize: 0, modificationDate: lastWeek, uti: .folder),
 
             // Images with different formats
-            FileItem(url: URL(fileURLWithPath: "/tmp/vacation.jpg"), name: "vacation.jpg", iconName: "photo", isDirectory: false, fileSize: 2_500_000, modificationDate: now),
-            FileItem(url: URL(fileURLWithPath: "/tmp/screenshot.png"), name: "screenshot.png", iconName: "photo", isDirectory: false, fileSize: 1_200_000, modificationDate: yesterday),
-            FileItem(url: URL(fileURLWithPath: "/tmp/animation.gif"), name: "animation.gif", iconName: "photo", isDirectory: false, fileSize: 500_000, modificationDate: lastWeek),
-            FileItem(url: URL(fileURLWithPath: "/tmp/profile.heic"), name: "profile.heic", iconName: "photo", isDirectory: false, fileSize: 3_000_000, modificationDate: now),
+            FileItem(url: URL(fileURLWithPath: "/tmp/vacation.jpg"), name: "vacation.jpg", iconName: "photo", isDirectory: false, fileSize: 2_500_000, modificationDate: now, uti: .jpeg),
+            FileItem(url: URL(fileURLWithPath: "/tmp/screenshot.png"), name: "screenshot.png", iconName: "photo", isDirectory: false, fileSize: 1_200_000, modificationDate: yesterday, uti: .png),
+            FileItem(url: URL(fileURLWithPath: "/tmp/animation.gif"), name: "animation.gif", iconName: "photo", isDirectory: false, fileSize: 500_000, modificationDate: lastWeek, uti: .gif),
+            FileItem(url: URL(fileURLWithPath: "/tmp/profile.heic"), name: "profile.heic", iconName: "photo", isDirectory: false, fileSize: 3_000_000, modificationDate: now, uti: .heic),
 
             // Non-image files for testing filtering
-            FileItem(url: URL(fileURLWithPath: "/tmp/document.pdf"), name: "document.pdf", iconName: "doc", isDirectory: false, fileSize: 150_000, modificationDate: yesterday),
-            FileItem(url: URL(fileURLWithPath: "/tmp/notes.txt"), name: "notes.txt", iconName: "doc", isDirectory: false, fileSize: 1_024, modificationDate: now)
+            FileItem(url: URL(fileURLWithPath: "/tmp/document.pdf"), name: "document.pdf", iconName: "doc", isDirectory: false, fileSize: 150_000, modificationDate: yesterday, uti: .pdf),
+            FileItem(url: URL(fileURLWithPath: "/tmp/notes.txt"), name: "notes.txt", iconName: "doc", isDirectory: false, fileSize: 1_024, modificationDate: now, uti: .text),
+            FileItem(url: URL(fileURLWithPath: "/tmp/code.js"), name: "code.js", iconName: "doc", isDirectory: false, fileSize: 10_240, modificationDate: yesterday, uti: .javaScript),
         ]
 
         return model

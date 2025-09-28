@@ -21,7 +21,7 @@ struct FileBrowserRowView: View {
             VStack(alignment: .leading) {
                 Text(item.name)
                     .lineLimit(1)
-                Text(item.url.path)
+                Text(item.modificationDate.formatted(date: .abbreviated, time: .shortened))
                     .lineLimit(1)
                     .foregroundColor(.gray)
             }
@@ -39,22 +39,22 @@ struct FileBrowserRowView: View {
         .contextMenu {
             Button(item.isDirectory ? "Rename Folder" : "Rename File") {
                 if item.isDirectory {
-                    print("TODO: Rename directory functionality")
+                    print("FUTURE: Rename directory functionality")
                     //browserModel.navigateInto(item: item)
                 } else {
-                    print("TODO: Rename file functionality")
+                    print("FUTURE: Rename file functionality")
                     // This could be a new method in your model or a simple action here
                 }
             }
-            // TODO: Add other menu items as needed
+            // FUTURE: Add other menu items as needed
             Divider()
 
             Button("Rename") {
-                print("TODO: Implement rename functionality")
+                print("FUTURE: Implement rename functionality")
             }
 
             Button("Get Info") {
-                print("TODO: Implement get info functionality")
+                print("FUTURE: Implement get info functionality")
             }
         }
     }

@@ -15,13 +15,13 @@ struct ContentView: View {
 
     var body: some View {
         HSplitView {
-            // Left sidebar - File browser
+            // Left pane - File browser
             PaneFileBrowserView(selectedImage: $selectedImage)
-                .frame(minWidth: 200, maxWidth: 400)
+                .frame(minWidth: 250, maxWidth: 400)
 
             // Right pane - Image viewer
             PaneImageViewer(selectedImage: selectedImage?.url)
-                .frame(minWidth: 400)
+                //.frame(minWidth: 500) // needed?
         }
         .fileImporter(
             isPresented: $browserModel.showingFileImporter,
@@ -39,7 +39,8 @@ struct ContentView: View {
                         iconName: "folder.fill",
                         isDirectory: true,
                         fileSize: 0,
-                        modificationDate: Date()
+                        modificationDate: Date(),
+                        uti: .folder
                     )
                     browserModel.navigateInto(item: folderItem)
                 }
