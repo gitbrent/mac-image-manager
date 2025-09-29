@@ -92,6 +92,10 @@ struct ContentView: View {
                         await browserModel.loadInitialDirectory()
                     }
                 }
+                .onChange(of: browserModel.currentDirectory) { _, _ in
+                    // Clear the selected image when navigating to a different directory
+                    selectedFile = nil
+                }
         }
     }
 }
