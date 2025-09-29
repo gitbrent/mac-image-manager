@@ -18,7 +18,7 @@ struct ContentView: View {
     private var mediaViewer: some View {
         if let file = selectedFile {
             switch file.mediaType {
-            case .staticImage:
+            case .staticImage, .unknown:
                 PaneImageViewer(selectedImage: file.url)
                     .frame(minWidth: 250)
             case .animatedGif:
@@ -27,7 +27,7 @@ struct ContentView: View {
             case .video:
                 PaneVideoViewer(videoUrl: file.url)
                     .frame(minWidth: 250, maxHeight: .infinity)
-            case .directory, .unknown:
+            case .directory:
                 // Show placeholder for unsupported types
                 VStack {
                     Image(systemName: "questionmark.square")
