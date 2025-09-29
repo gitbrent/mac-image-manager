@@ -18,19 +18,39 @@ struct PaneFileBrowserView: View {
             // 2: divider
             Divider()
             // 3: File list
-            List(browserModel.items, id: \.id, selection: $selectedImage) { item in
-                FileBrowserRowView(item: item)
-                    .environmentObject(browserModel)
-                    .tag(item)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        if item.isDirectory {
-                            browserModel.navigateInto(item: item)
-                        //} else if item.mediaType != .unknown {
-                        } else {
-                            selectedImage = item
+            ScrollViewReader { proxy in
+                List(browserModel.items, id: \.id, selection: $selectedImage) { item in
+                    FileBrowserRowView(item: item)
+                        .environmentObject(browserModel)
+                        .tag(item)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if item.isDirectory {
+                                browserModel.navigateInto(item: item)
+                                // Scroll to top when navigating into a directory
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    if let firstItem = browserModel.items.first {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            proxy.scrollTo(firstItem.id, anchor: .top)
+                                        }
+                                    }
+                                }
+                            //} else if item.mediaType != .unknown {
+                            } else {
+                                selectedImage = item
+                            }
+                        }
+                }
+                .onChange(of: browserModel.currentDirectory) { _ in
+                    // Also scroll to top when using the "up" navigation button
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        if let firstItem = browserModel.items.first {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(firstItem.id, anchor: .top)
+                            }
                         }
                     }
+                }
             }
         }
     }
