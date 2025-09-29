@@ -26,7 +26,8 @@ struct PaneFileBrowserView: View {
                     .onTapGesture {
                         if item.isDirectory {
                             browserModel.navigateInto(item: item)
-                        } else if item.mediaType != .unknown {
+                        //} else if item.mediaType != .unknown {
+                        } else {
                             selectedImage = item
                         }
                     }
