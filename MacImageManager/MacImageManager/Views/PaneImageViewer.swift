@@ -10,11 +10,13 @@ import SwiftUI
 struct PaneImageViewer: View {
     let selectedImage: URL?
     @State private var loadedImage: NSImage?
+    @State private var currentLoadingURL: URL?
+    @State private var loadingTask: Task<Void, Never>?
 
     var body: some View {
         Group {
             if selectedImage != nil {
-                if let loadedImage = loadedImage {
+                if let loadedImage = loadedImage, currentLoadingURL == selectedImage {
                     ScrollView([.horizontal, .vertical]) {
                         Image(nsImage: loadedImage)
                             .resizable()
@@ -41,20 +43,50 @@ struct PaneImageViewer: View {
                 .background(Color(NSColor.controlBackgroundColor))
             }
         }
-        .onChange(of: selectedImage) { oldValue, newValue in
+        .onChange(of: selectedImage) { _, newValue in
             loadImage(from: newValue)
+        }
+        .onAppear {
+            loadImage(from: selectedImage)
         }
     }
 
     private func loadImage(from url: URL?) {
-        // Clear current image immediately to show loading state
-        loadedImage = nil
+        // Cancel any existing loading task
+        loadingTask?.cancel()
 
-        guard let url = url else { return }
+        guard let url = url else {
+            loadedImage = nil
+            currentLoadingURL = nil
+            return
+        }
 
-        DispatchQueue.global(qos: .userInitiated).async {
-            if let image = NSImage(contentsOf: url) {
-                DispatchQueue.main.async {
+        // Don't reload if it's the exact same URL and we already have the image loaded for it
+        if currentLoadingURL == url && loadedImage != nil {
+            return
+        }
+
+        // Set the new loading URL and clear image if switching URLs
+        let previousURL = currentLoadingURL
+        currentLoadingURL = url
+
+        // Clear the loaded image if we're switching to a different URL
+        if previousURL != url {
+            loadedImage = nil
+        }
+
+        loadingTask = Task {
+            let image = await withTaskCancellationHandler {
+                return await Task.detached(priority: .userInitiated) {
+                    NSImage(contentsOf: url)
+                }.value
+            } onCancel: {
+                // Handle cancellation if needed
+            }
+
+            // Only update if this task wasn't cancelled and we're still loading the same URL
+            if !Task.isCancelled && currentLoadingURL == url {
+                await MainActor.run {
                     self.loadedImage = image
                 }
             }

@@ -18,19 +18,39 @@ struct PaneFileBrowserView: View {
             // 2: divider
             Divider()
             // 3: File list
-            List(browserModel.items, id: \.id, selection: $selectedImage) { item in
-                FileBrowserRowView(item: item)
-                    .environmentObject(browserModel)
-                    .tag(item)
-                    .contentShape(Rectangle())
-                    .onTapGesture {
-                        if item.isDirectory {
-                            browserModel.navigateInto(item: item)
-                        } else if !item.isVideo && !item.isAnimatedGif {
-                            selectedImage = item
+            ScrollViewReader { proxy in
+                List(browserModel.items, id: \.id, selection: $selectedImage) { item in
+                    FileBrowserRowView(item: item)
+                        .environmentObject(browserModel)
+                        .tag(item)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            if item.isDirectory {
+                                browserModel.navigateInto(item: item)
+                                // Scroll to top when navigating into a directory
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    if let firstItem = browserModel.items.first {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            proxy.scrollTo(firstItem.id, anchor: .top)
+                                        }
+                                    }
+                                }
+                            //} else if item.mediaType != .unknown {
+                            } else {
+                                selectedImage = item
+                            }
+                        }
+                }
+                .onChange(of: browserModel.currentDirectory) { _ in
+                    // Also scroll to top when using the "up" navigation button
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        if let firstItem = browserModel.items.first {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                proxy.scrollTo(firstItem.id, anchor: .top)
+                            }
                         }
                     }
-                    .disabled(item.isVideo || item.isAnimatedGif) // TODO: add support!
+                }
             }
         }
     }
@@ -53,7 +73,7 @@ struct NavigationHeader: View {
 
             Spacer()
 
-            Text("\(browserModel.imageCount) images")
+            Text("\(browserModel.supportedFileCount) items")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
@@ -64,10 +84,10 @@ struct NavigationHeader: View {
 
 private struct PaneFileBrowserPreviewContainer: View {
     @StateObject private var model = BrowserModel.preview
-    @State private var selectedImage: FileItem?
+    @State private var selectedFile: FileItem?
 
     var body: some View {
-        PaneFileBrowserView(selectedImage: $selectedImage)
+        PaneFileBrowserView(selectedImage: $selectedFile)
             .environmentObject(model)
     }
 }

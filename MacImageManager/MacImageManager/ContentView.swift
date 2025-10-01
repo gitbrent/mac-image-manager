@@ -9,49 +9,93 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct ContentView: View {
-    // 1. Use EnvironmentObject to access the shared model
+    // Use EnvironmentObject to access the shared model
     @EnvironmentObject private var browserModel: BrowserModel
-    @State private var selectedImage: FileItem?
+    @State private var selectedFile: FileItem?
+
+    // View selection based on media type
+    @ViewBuilder
+    private var mediaViewer: some View {
+        if let file = selectedFile {
+            switch file.mediaType {
+            case .staticImage, .unknown:
+                PaneImageViewer(selectedImage: file.url)
+                    .frame(minWidth: 250)
+            case .animatedGif:
+                PaneGifViewer(gifUrl: file.url)
+                    .frame(minWidth: 250, maxHeight: .infinity)
+            case .video:
+                PaneVideoViewer(videoUrl: file.url)
+                    .frame(minWidth: 250, maxHeight: .infinity)
+            case .directory:
+                // Show placeholder for unsupported types
+                VStack {
+                    Image(systemName: "questionmark.square")
+                        .font(.system(size: 64))
+                        .foregroundColor(.secondary)
+                    Text("Unsupported file type")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(NSColor.controlBackgroundColor))
+            }
+        } else {
+            // Empty state when no file is selected
+            VStack {
+                Image(systemName: "photo.on.rectangle")
+                    .font(.system(size: 64))
+                    .foregroundColor(.secondary)
+                Text("(select a file)")
+                    .font(.title2)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(NSColor.controlBackgroundColor))
+        }
+    }
 
     var body: some View {
         HSplitView {
             // Left pane - File browser
-            PaneFileBrowserView(selectedImage: $selectedImage)
+            PaneFileBrowserView(selectedImage: $selectedFile)
                 .frame(minWidth: 250, maxWidth: 400)
 
-            // Right pane - Image viewer
-            PaneImageViewer(selectedImage: selectedImage?.url)
-                .frame(minWidth: 250)
-        }
-        .fileImporter(
-            isPresented: $browserModel.showingFileImporter,
-            allowedContentTypes: [.folder],
-            allowsMultipleSelection: false
-        ) { result in
-            do {
-                let urls = try result.get()
-                if urls.count > 0 {
-                    // Create a temporary FileItem for the imported folder
-                    let folderUrl = urls[0]
-                    let folderItem = FileItem(
-                        url: folderUrl,
-                        name: folderUrl.lastPathComponent,
-                        iconName: "folder.fill",
-                        isDirectory: true,
-                        fileSize: 0,
-                        modificationDate: Date(),
-                        uti: .folder,
-                        isAnimatedGif: false,
-                        isVideo: false
-                    )
-                    browserModel.navigateInto(item: folderItem)
+            // Right pane - Media viewer
+            mediaViewer
+                .fileImporter(
+                    isPresented: $browserModel.showingFileImporter,
+                    allowedContentTypes: [.folder],
+                    allowsMultipleSelection: false
+                ) { result in
+                    switch result {
+                    case .success(let urls):
+                        if let folderUrl = urls.first {
+                            Task {
+                                let folderItem = await FileItem(
+                                    url: folderUrl,
+                                    name: folderUrl.lastPathComponent,
+                                    isDirectory: true,
+                                    fileSize: 0,
+                                    modificationDate: Date(),
+                                    uti: .folder
+                                )
+                                browserModel.navigateInto(item: folderItem)
+                            }
+                        }
+                    case .failure(let error):
+                        print("Failed to import folder: \(error.localizedDescription)")
+                    }
                 }
-            } catch {
-                print("Failed to import folder: \(error.localizedDescription)")
-            }
-        }
-        .onAppear {
-            browserModel.loadInitialDirectory()
+                .onAppear {
+                    Task {
+                        await browserModel.loadInitialDirectory()
+                    }
+                }
+                .onChange(of: browserModel.currentDirectory) { _, _ in
+                    // Clear the selected image when navigating to a different directory
+                    selectedFile = nil
+                }
         }
     }
 }
