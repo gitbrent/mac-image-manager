@@ -164,7 +164,7 @@ struct PaneGifViewer: View {
     var body: some View {
         Group {
             if let gifUrl = gifUrl {
-                VStack {
+                VStack(spacing: 0) {
                     // Main Display Area
                     if useWebView {
                         // WebView fallback for complex GIFs
