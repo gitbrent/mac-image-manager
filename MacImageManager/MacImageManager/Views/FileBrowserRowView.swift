@@ -21,8 +21,20 @@ struct FileBrowserRowView: View {
                 .frame(width: 32, height: 32)
 
             VStack(alignment: .leading) {
-                Text(item.name)
-                    .lineLimit(1)
+                if browserModel.isRenamingFile && browserModel.selectedFile?.id == item.id {
+                    TextField("File name", text: $browserModel.renamingText)
+                        .textFieldStyle(.roundedBorder)
+                        .onSubmit {
+                            browserModel.completeRename()
+                        }
+                        .onExitCommand {
+                            browserModel.cancelRename()
+                        }
+                } else {
+                    Text(item.name)
+                        .lineLimit(1)
+                }
+
                 Text(item.modificationDate.formatted(date: .abbreviated, time: .shortened))
                     .lineLimit(1)
                     .foregroundColor(.gray)
@@ -40,27 +52,34 @@ struct FileBrowserRowView: View {
         .padding(.vertical, 2)
         .contextMenu {
             Button(item.isDirectory ? "Rename Folder" : "Rename File") {
-                if item.isDirectory {
-                    print("FUTURE: Rename directory functionality")
-                    //browserModel.navigateInto(item: item)
-                } else {
-                    print("FUTURE: Rename file functionality")
-                    // This could be a new method in your model or a simple action here
-                }
+                // Set this item as selected and start renaming
+                browserModel.selectedFile = item
+                browserModel.startRenamingSelectedFile()
             }
-            // FUTURE: Add other menu items as needed
+            .disabled(item.isDirectory) // For now, disable directory renaming
+
+            Button("Delete") {
+                browserModel.selectedFile = item
+                browserModel.deleteSelectedFile()
+            }
+
             Divider()
 
-            Button("Rename") {
-                print("FUTURE: Implement rename functionality")
+            Button("Show in Finder") {
+                NSWorkspace.shared.selectFile(item.url.path, inFileViewerRootedAtPath: "")
             }
 
-            Button("Get Info") {
-                print("FUTURE: Implement get info functionality")
+            if item.mediaType == .video {
+                Divider()
+
+                Button("Play/Pause") {
+                    browserModel.selectedFile = item
+                    browserModel.toggleVideoPlayback()
+                }
             }
         }
     }
-    
+
     private func tint(for item: FileItem) -> Color {
         if item.isDirectory { return .blue }
         guard let type = item.uti else { return .secondary }

@@ -9,12 +9,26 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 import Combine
+import AVKit
 
 class BrowserModel: ObservableObject {
     @Published var items: [FileItem] = []
     @Published var currentDirectory: URL
     @Published var canNavigateUp: Bool = false
     @Published var showingFileImporter: Bool = false
+    @Published var selectedFile: FileItem?
+    @Published var isRenamingFile = false
+    @Published var renamingText = ""
+
+    // Video control state
+    @Published var currentVideoPlayer: AVPlayer?
+
+    // Publisher for video actions
+    let videoActionPublisher = PassthroughSubject<VideoAction, Never>()
+
+    enum VideoAction {
+        case play, pause, toggle, jumpForward, jumpBackward, restart
+    }
 
     // Cache to speed up metadata recomputation in large directories
     private var fileItemCache: [URL: FileItem] = [:]
@@ -197,5 +211,144 @@ class BrowserModel: ObservableObject {
         }
 
         return imageItems.last
+    }
+
+    // MARK: - Menu Actions
+
+    /// Computed property to check if a file is selected for menu state
+    var hasSelectedFile: Bool {
+        selectedFile != nil
+    }
+
+    /// Computed property to check if selected file is renameable
+    var canRenameSelectedFile: Bool {
+        guard let file = selectedFile else { return false }
+        return !file.isDirectory // For now, only allow renaming files, not directories
+    }
+
+    /// Start renaming the currently selected file
+    func startRenamingSelectedFile() {
+        guard let file = selectedFile else { return }
+        renamingText = file.name
+        isRenamingFile = true
+    }
+
+    /// Complete the rename operation
+    func completeRename() {
+        guard let file = selectedFile, !renamingText.isEmpty else {
+            cancelRename()
+            return
+        }
+
+        let newURL = file.url.deletingLastPathComponent().appendingPathComponent(renamingText)
+
+        do {
+            try FileManager.default.moveItem(at: file.url, to: newURL)
+
+            // Update the file item in our list
+            if let index = items.firstIndex(where: { $0.url == file.url }) {
+                Task {
+                    let updatedItem = await FileItem(
+                        url: newURL,
+                        name: renamingText,
+                        isDirectory: file.isDirectory,
+                        fileSize: file.fileSize,
+                        modificationDate: file.modificationDate,
+                        uti: file.uti
+                    )
+                    await MainActor.run {
+                        items[index] = updatedItem
+                        selectedFile = updatedItem
+
+                        // Update cache
+                        fileItemCache.removeValue(forKey: file.url)
+                        fileItemCache[newURL] = updatedItem
+                    }
+                }
+            }
+
+            print("Successfully renamed \(file.name) to \(renamingText)")
+        } catch {
+            print("Failed to rename file: \(error.localizedDescription)")
+        }
+
+        cancelRename()
+    }
+
+    /// Cancel the rename operation
+    func cancelRename() {
+        isRenamingFile = false
+        renamingText = ""
+    }
+
+    /// Delete the currently selected file
+    func deleteSelectedFile() {
+        guard let file = selectedFile else { return }
+
+        do {
+            try FileManager.default.trashItem(at: file.url, resultingItemURL: nil)
+
+            // Remove from our list
+            items.removeAll { $0.url == file.url }
+            fileItemCache.removeValue(forKey: file.url)
+            selectedFile = nil
+
+            print("Successfully moved \(file.name) to trash")
+        } catch {
+            print("Failed to delete file: \(error.localizedDescription)")
+        }
+    }
+
+    /// Show selected file in Finder
+    func showSelectedFileInFinder() {
+        guard let file = selectedFile else { return }
+        NSWorkspace.shared.selectFile(file.url.path, inFileViewerRootedAtPath: "")
+    }
+
+    // MARK: - Video Control Actions
+
+    /// Toggle video playback (play/pause)
+    func toggleVideoPlayback() {
+        videoActionPublisher.send(.toggle)
+    }
+
+    /// Play video
+    func playVideo() {
+        videoActionPublisher.send(.play)
+    }
+
+    /// Pause video
+    func pauseVideo() {
+        videoActionPublisher.send(.pause)
+    }
+
+    /// Jump forward 10 seconds
+    func jumpVideoForward() {
+        videoActionPublisher.send(.jumpForward)
+    }
+
+    /// Jump backward 10 seconds
+    func jumpVideoBackward() {
+        videoActionPublisher.send(.jumpBackward)
+    }
+
+    /// Restart video from beginning
+    func restartVideo() {
+        videoActionPublisher.send(.restart)
+    }
+
+    /// Set the current video player reference
+    func setVideoPlayer(_ player: AVPlayer?) {
+        currentVideoPlayer = player
+    }
+
+    /// Check if we currently have a video playing
+    var hasVideoPlayer: Bool {
+        currentVideoPlayer != nil
+    }
+
+    /// Check if current selection is a video file
+    var selectedFileIsVideo: Bool {
+        selectedFile?.mediaType == .video
     }
 }
