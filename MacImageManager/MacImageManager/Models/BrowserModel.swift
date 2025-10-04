@@ -235,6 +235,12 @@ class BrowserModel: ObservableObject {
             return
         }
 
+        // Validate the filename
+        guard isValidFilename(renamingText) else {
+            cancelRename()
+            return
+        }
+
         // Check if the name hasn't actually changed
         guard renamingText != file.name else {
             cancelRename()
@@ -356,5 +362,36 @@ class BrowserModel: ObservableObject {
     /// Check if current selection is a video file
     var selectedFileIsVideo: Bool {
         selectedFile?.mediaType == .video
+    }
+
+    /// Validate filename for macOS compatibility
+    private func isValidFilename(_ filename: String) -> Bool {
+        let trimmedName = filename.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Check for empty or whitespace-only names
+        guard !trimmedName.isEmpty else { return false }
+
+        // Check if it's just an extension (starts with .)
+        guard !trimmedName.hasPrefix(".") else { return false }
+
+        // Check filename length (macOS limit is 255 bytes, but we'll use a conservative limit)
+        guard trimmedName.count <= 255 else { return false }
+
+        // Check for invalid characters on macOS
+        // macOS is more permissive than Windows, but these are still problematic
+        let invalidCharacters = CharacterSet(charactersIn: ":\0")
+        guard trimmedName.rangeOfCharacter(from: invalidCharacters) == nil else { return false }
+
+        // Check for names that are just dots
+        guard trimmedName != "." && trimmedName != ".." else { return false }
+
+        // Check for control characters (0x00-0x1F and 0x7F)
+        for char in trimmedName.unicodeScalars {
+            if char.value <= 0x1F || char.value == 0x7F {
+                return false
+            }
+        }
+
+        return true
     }
 }
