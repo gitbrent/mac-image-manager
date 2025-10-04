@@ -235,6 +235,12 @@ class BrowserModel: ObservableObject {
             return
         }
 
+        // Check if the name hasn't actually changed
+        guard renamingText != file.name else {
+            cancelRename()
+            return
+        }
+
         let newURL = file.url.deletingLastPathComponent().appendingPathComponent(renamingText)
 
         do {
@@ -258,16 +264,21 @@ class BrowserModel: ObservableObject {
                         // Update cache
                         fileItemCache.removeValue(forKey: file.url)
                         fileItemCache[newURL] = updatedItem
+
+                        // Cancel rename mode after UI is updated
+                        cancelRename()
                     }
                 }
+            } else {
+                // If item not found in list, still cancel rename mode
+                cancelRename()
             }
 
             print("Successfully renamed \(file.name) to \(renamingText)")
         } catch {
             print("Failed to rename file: \(error.localizedDescription)")
+            cancelRename()
         }
-
-        cancelRename()
     }
 
     /// Cancel the rename operation
