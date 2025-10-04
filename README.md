@@ -8,26 +8,28 @@ A modern, native macOS application for viewing and managing images.
   - File browser on the left, image viewer on the right
 - **Image Viewer**
   - Supports common image formats (JPG, JPEG, PNG, GIF, BMP, TIFF, HEIC, WEBP, SVG, ICO)
+  - Supports RAW image formats and large images
   - View animated GIFs and videos
 - **File Browser**
   - Easy directory navigation
-- **Batch Actions**
+  - Rename files
+- **Batch Actions** (WIP)
   - Mass-rename files
   - Mass-move/copy files
 
 ## 📸 Screenshots
 
-- Image viewer:
+Image viewer:
 
-  ![mac-image-manager_image-viewer](MacImageManager/MacImageManager/Assets.xcassets/Preview/preview1.imageset/Preview1.png)
+![mac-image-manager_image-viewer](https://github.com/user-attachments/assets/6dce725b-3972-47a1-b376-b895dcc74b11)
 
-- GIF viewer:
+GIF viewer:
 
-  ![mac-image-manager_gif-viewer](MacImageManager/MacImageManager/Assets.xcassets/Preview/preview3.imageset/Preview3.png)
+![mac-image-manager_gif-viewer](https://github.com/user-attachments/assets/1d26537c-2ec7-4f8c-99d1-cc4f5ea16c23)
 
-- Video viewer:
+Video viewer:
 
-  ![mac-image-manager_video-viewer](MacImageManager/MacImageManager/Assets.xcassets/Preview/preview2.imageset/Preview2.png)
+![mac-image-manager_gif-viewer](https://github.com/user-attachments/assets/383ee34b-8dbe-4e0f-baad-af98150e3120)
 
 ## ⚙️ Requirements
 
