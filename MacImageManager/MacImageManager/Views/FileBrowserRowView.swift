@@ -11,6 +11,7 @@ import UniformTypeIdentifiers
 struct FileBrowserRowView: View {
     @EnvironmentObject var browserModel: BrowserModel
     let item: FileItem
+    @FocusState private var isTextFieldFocused: Bool
 
     var body: some View {
         HStack {
@@ -20,33 +21,42 @@ struct FileBrowserRowView: View {
                 .foregroundStyle(tint(for: item))
                 .frame(width: 32, height: 32)
 
-            VStack(alignment: .leading) {
-                if browserModel.isRenamingFile && browserModel.selectedFile?.id == item.id {
-                    TextField("File name", text: $browserModel.renamingText)
-                        .textFieldStyle(.roundedBorder)
-                        .onSubmit {
-                            browserModel.completeRename()
+            if browserModel.isRenamingFile && browserModel.selectedFile?.id == item.id {
+                // Rename mode: just show centered TextField
+                TextField("File name", text: $browserModel.renamingText)
+                    .textFieldStyle(.roundedBorder)
+                    .focused($isTextFieldFocused)
+                    .onAppear {
+                        // Auto-focus the text field
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            isTextFieldFocused = true
                         }
-                        .onExitCommand {
-                            browserModel.cancelRename()
-                        }
-                } else {
+                    }
+                    .onSubmit {
+                        browserModel.completeRename()
+                    }
+                    .onExitCommand {
+                        browserModel.cancelRename()
+                    }
+            } else {
+                // Normal mode: show name, date, and file size
+                VStack(alignment: .leading) {
                     Text(item.name)
                         .lineLimit(1)
+
+                    Text(item.modificationDate.formatted(date: .abbreviated, time: .shortened))
+                        .lineLimit(1)
+                        .foregroundColor(.gray)
                 }
 
-                Text(item.modificationDate.formatted(date: .abbreviated, time: .shortened))
-                    .lineLimit(1)
-                    .foregroundColor(.gray)
-            }
+                Spacer() // NOTE: push content left
 
-            Spacer() // NOTE: push content left
-
-            if !item.isDirectory {
-                Text(item.formattedFileSize)
-                    .frame(minWidth: 70, alignment: .trailing)
-                    .foregroundColor(.gray)
-                    .font(.system(size: 12))
+                if !item.isDirectory {
+                    Text(item.formattedFileSize)
+                        .frame(minWidth: 70, alignment: .trailing)
+                        .foregroundColor(.gray)
+                        .font(.system(size: 12))
+                }
             }
         }
         .padding(.vertical, 2)
@@ -57,7 +67,7 @@ struct FileBrowserRowView: View {
                 browserModel.startRenamingSelectedFile()
             }
             .keyboardShortcut("r", modifiers: .command)
-            .disabled(item.isDirectory) // For now, disable directory renaming
+            .disabled(item.isDirectory) // TODO: For now, disable directory renaming
 
             Button("Delete") {
                 browserModel.selectedFile = item
