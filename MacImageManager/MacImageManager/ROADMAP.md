@@ -7,3 +7,8 @@
 
 ## QA/DEV
 - add unit tests using Swift Testing to cover common cases (e.g., .jpg, .heic, .webp, and unknown extensions).
+
+## BRANCH
+- remove `#W` (Close) item from FILE menu
+- context-menu items dont have keyboard shortcut (*R)
+- space only kinda works sometimes for play/pause

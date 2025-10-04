@@ -19,12 +19,7 @@ class BrowserModel: ObservableObject {
     @Published var selectedFile: FileItem?
     @Published var isRenamingFile = false
     @Published var renamingText = ""
-
-    // Video control state
     @Published var currentVideoPlayer: AVPlayer?
-
-    // Publisher for video actions
-    let videoActionPublisher = PassthroughSubject<VideoAction, Never>()
 
     enum VideoAction {
         case play, pause, toggle, jumpForward, jumpBackward, restart
@@ -56,6 +51,8 @@ class BrowserModel: ObservableObject {
         updateNavigationState()
     }
 
+    let videoActionPublisher = PassthroughSubject<VideoAction, Never>()
+
     var currentDirectoryName: String {
         currentDirectory.lastPathComponent
     }
@@ -86,8 +83,6 @@ class BrowserModel: ObservableObject {
 
                 let uti = resourceValues.contentType
                 let isDir = resourceValues.isDirectory ?? false
-                let isAnimatedGif = uti?.conforms(to: UTType.gif) ?? false
-                let isVideo = uti?.conforms(to: UTType.movie) ?? false
                 let fileSize = resourceValues.fileSize ?? 0
                 let modDate = resourceValues.contentModificationDate ?? Date()
 

@@ -15,7 +15,7 @@ struct MacImageManagerApp: App {
         WindowGroup {
             ContentView()
                 .frame(minWidth: 1200, minHeight: 800)
-                // 💡 Add the shared model to the environment so child views can access it
+                // Add the shared model to the environment so child views can access it
                 .environmentObject(browserModel)
                 .onAppear {
                     NSWindow.allowsAutomaticWindowTabbing = false

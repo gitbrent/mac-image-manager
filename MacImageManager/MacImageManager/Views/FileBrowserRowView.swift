@@ -56,18 +56,21 @@ struct FileBrowserRowView: View {
                 browserModel.selectedFile = item
                 browserModel.startRenamingSelectedFile()
             }
+            .keyboardShortcut("r", modifiers: .command)
             .disabled(item.isDirectory) // For now, disable directory renaming
 
             Button("Delete") {
                 browserModel.selectedFile = item
                 browserModel.deleteSelectedFile()
             }
+            .keyboardShortcut(.delete)
 
             Divider()
 
             Button("Show in Finder") {
-                NSWorkspace.shared.selectFile(item.url.path, inFileViewerRootedAtPath: "")
+                browserModel.showSelectedFileInFinder()
             }
+            .keyboardShortcut("r", modifiers: [.command, .shift])
 
             if item.mediaType == .video {
                 Divider()
