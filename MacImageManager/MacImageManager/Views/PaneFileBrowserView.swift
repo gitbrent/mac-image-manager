@@ -10,6 +10,7 @@ import SwiftUI
 struct PaneFileBrowserView: View {
     @EnvironmentObject var browserModel: BrowserModel
     @Binding var selectedImage: FileItem?
+    @FocusState private var isListFocused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -40,6 +41,18 @@ struct PaneFileBrowserView: View {
                                 selectedImage = item
                             }
                         }
+                }
+                .focused($isListFocused)
+                .onAppear {
+                    isListFocused = true
+                }
+                .onChange(of: browserModel.isRenamingFile) { isRenaming in
+                    // Restore focus to list when exiting rename mode
+                    if !isRenaming {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            isListFocused = true
+                        }
+                    }
                 }
                 .onChange(of: browserModel.currentDirectory) { _ in
                     // Also scroll to top when using the "up" navigation button
