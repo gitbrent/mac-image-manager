@@ -11,7 +11,6 @@ struct PaneFileBrowserView: View {
     @EnvironmentObject var browserModel: BrowserModel
     @Binding var selectedImage: FileItem?
     @FocusState private var isListFocused: Bool
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 1: Navigation header
@@ -36,7 +35,6 @@ struct PaneFileBrowserView: View {
                                         }
                                     }
                                 }
-                            //} else if item.mediaType != .unknown {
                             } else {
                                 selectedImage = item
                             }
@@ -46,7 +44,7 @@ struct PaneFileBrowserView: View {
                 .onAppear {
                     isListFocused = true
                 }
-                .onChange(of: browserModel.isRenamingFile) { isRenaming in
+                .onChange(of: browserModel.isRenamingFile) { _, isRenaming in
                     // Restore focus to list when exiting rename mode
                     if !isRenaming {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -54,7 +52,7 @@ struct PaneFileBrowserView: View {
                         }
                     }
                 }
-                .onChange(of: browserModel.currentDirectory) { _ in
+                .onChange(of: browserModel.currentDirectory) { _, _ in
                     // Also scroll to top when using the "up" navigation button
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                         if let firstItem = browserModel.items.first {
