@@ -7,11 +7,12 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import AppKit
 
 struct FileBrowserRowView: View {
     @EnvironmentObject var browserModel: BrowserModel
-    let item: FileItem
     @FocusState private var isTextFieldFocused: Bool
+    let item: FileItem
 
     var body: some View {
         HStack {
@@ -23,21 +24,12 @@ struct FileBrowserRowView: View {
 
             if browserModel.isRenamingFile && browserModel.selectedFile?.id == item.id {
                 // Rename mode: just show centered TextField
-                TextField("File name", text: $browserModel.renamingText)
-                    .textFieldStyle(.roundedBorder)
-                    .focused($isTextFieldFocused)
-                    .onAppear {
-                        // Auto-focus the text field
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            isTextFieldFocused = true
-                        }
-                    }
-                    .onSubmit {
-                        browserModel.completeRename()
-                    }
-                    .onExitCommand {
-                        browserModel.cancelRename()
-                    }
+                RenameTextField(
+                    text: $browserModel.renamingText,
+                    isTextFieldFocused: $isTextFieldFocused,
+                    onSubmit: { browserModel.completeRename() },
+                    onCancel: { browserModel.cancelRename() }
+                )
             } else {
                 // Normal mode: show name, date, and file size
                 VStack(alignment: .leading) {
@@ -112,6 +104,76 @@ struct FileBrowserRowView: View {
         if type.conforms(to: .plainText) { return .gray }
 
         return .secondary
+    }
+}
+
+struct RenameTextField: NSViewRepresentable {
+    @Binding var text: String
+    var isTextFieldFocused: FocusState<Bool>.Binding
+    let onSubmit: () -> Void
+    let onCancel: () -> Void
+
+    func makeNSView(context: Context) -> NSTextField {
+        let textField = NSTextField()
+        textField.stringValue = text
+        textField.delegate = context.coordinator
+        textField.target = context.coordinator
+        textField.action = #selector(Coordinator.textFieldAction)
+
+        // Auto-select filename without extension
+        DispatchQueue.main.async {
+            textField.becomeFirstResponder()
+
+            if let dotIndex = text.lastIndex(of: "."),
+               dotIndex > text.startIndex {
+                let filename = String(text[..<dotIndex])
+                textField.currentEditor()?.selectedRange = NSRange(location: 0, length: filename.count)
+            } else {
+                textField.selectText(nil)
+            }
+        }
+
+        return textField
+    }
+
+    func updateNSView(_ nsView: NSTextField, context: Context) {
+        if nsView.stringValue != text {
+            nsView.stringValue = text
+        }
+
+        if isTextFieldFocused.wrappedValue && nsView.window?.firstResponder != nsView.currentEditor() {
+            nsView.becomeFirstResponder()
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, NSTextFieldDelegate {
+        let parent: RenameTextField
+
+        init(_ parent: RenameTextField) {
+            self.parent = parent
+        }
+
+        @objc func textFieldAction() {
+            parent.onSubmit()
+        }
+
+        func controlTextDidChange(_ obj: Notification) {
+            if let textField = obj.object as? NSTextField {
+                parent.text = textField.stringValue
+            }
+        }
+
+        func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+            if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                parent.onCancel()
+                return true
+            }
+            return false
+        }
     }
 }
 
