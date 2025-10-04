@@ -9,12 +9,21 @@ import Foundation
 import SwiftUI
 import UniformTypeIdentifiers
 import Combine
+import AVKit
 
 class BrowserModel: ObservableObject {
     @Published var items: [FileItem] = []
     @Published var currentDirectory: URL
     @Published var canNavigateUp: Bool = false
     @Published var showingFileImporter: Bool = false
+    @Published var selectedFile: FileItem?
+    @Published var isRenamingFile = false
+    @Published var renamingText = ""
+    @Published var currentVideoPlayer: AVPlayer?
+
+    enum VideoAction {
+        case play, pause, toggle, jumpForward, jumpBackward, restart
+    }
 
     // Cache to speed up metadata recomputation in large directories
     private var fileItemCache: [URL: FileItem] = [:]
@@ -41,6 +50,8 @@ class BrowserModel: ObservableObject {
 
         updateNavigationState()
     }
+
+    let videoActionPublisher = PassthroughSubject<VideoAction, Never>()
 
     var currentDirectoryName: String {
         currentDirectory.lastPathComponent
@@ -72,8 +83,6 @@ class BrowserModel: ObservableObject {
 
                 let uti = resourceValues.contentType
                 let isDir = resourceValues.isDirectory ?? false
-                let isAnimatedGif = uti?.conforms(to: UTType.gif) ?? false
-                let isVideo = uti?.conforms(to: UTType.movie) ?? false
                 let fileSize = resourceValues.fileSize ?? 0
                 let modDate = resourceValues.contentModificationDate ?? Date()
 
@@ -197,5 +206,192 @@ class BrowserModel: ObservableObject {
         }
 
         return imageItems.last
+    }
+
+    // MARK: - Menu Actions
+
+    /// Computed property to check if a file is selected for menu state
+    var hasSelectedFile: Bool {
+        selectedFile != nil
+    }
+
+    /// Computed property to check if selected file is renameable
+    var canRenameSelectedFile: Bool {
+        guard let file = selectedFile else { return false }
+        return !file.isDirectory // For now, only allow renaming files, not directories
+    }
+
+    /// Start renaming the currently selected file
+    func startRenamingSelectedFile() {
+        guard let file = selectedFile else { return }
+        renamingText = file.name
+        isRenamingFile = true
+    }
+
+    /// Complete the rename operation
+    func completeRename() {
+        guard let file = selectedFile, !renamingText.isEmpty else {
+            cancelRename()
+            return
+        }
+
+        // Validate the filename
+        guard isValidFilename(renamingText) else {
+            cancelRename()
+            return
+        }
+
+        // Check if the name hasn't actually changed
+        guard renamingText != file.name else {
+            cancelRename()
+            return
+        }
+
+        let newURL = file.url.deletingLastPathComponent().appendingPathComponent(renamingText)
+
+        do {
+            try FileManager.default.moveItem(at: file.url, to: newURL)
+
+            // Update the file item in our list
+            if let index = items.firstIndex(where: { $0.url == file.url }) {
+                Task {
+                    let updatedItem = await FileItem(
+                        url: newURL,
+                        name: renamingText,
+                        isDirectory: file.isDirectory,
+                        fileSize: file.fileSize,
+                        modificationDate: file.modificationDate,
+                        uti: file.uti
+                    )
+                    await MainActor.run {
+                        items[index] = updatedItem
+                        selectedFile = updatedItem
+
+                        // Update cache
+                        fileItemCache.removeValue(forKey: file.url)
+                        fileItemCache[newURL] = updatedItem
+
+                        // Cancel rename mode after UI is updated
+                        cancelRename()
+                    }
+                }
+            } else {
+                // If item not found in list, still cancel rename mode
+                cancelRename()
+            }
+
+            print("Successfully renamed \(file.name) to \(renamingText)")
+        } catch {
+            print("Failed to rename file: \(error.localizedDescription)")
+            cancelRename()
+        }
+    }
+
+    /// Cancel the rename operation
+    func cancelRename() {
+        isRenamingFile = false
+        renamingText = ""
+    }
+
+    /// Delete the currently selected file
+    func deleteSelectedFile() {
+        guard let file = selectedFile else { return }
+
+        do {
+            try FileManager.default.trashItem(at: file.url, resultingItemURL: nil)
+
+            // Remove from our list
+            items.removeAll { $0.url == file.url }
+            fileItemCache.removeValue(forKey: file.url)
+            selectedFile = nil
+
+            print("Successfully moved \(file.name) to trash")
+        } catch {
+            print("Failed to delete file: \(error.localizedDescription)")
+        }
+    }
+
+    /// Show selected file in Finder
+    func showSelectedFileInFinder() {
+        guard let file = selectedFile else { return }
+        NSWorkspace.shared.selectFile(file.url.path, inFileViewerRootedAtPath: "")
+    }
+
+    // MARK: - Video Control Actions
+
+    /// Toggle video playback (play/pause)
+    func toggleVideoPlayback() {
+        videoActionPublisher.send(.toggle)
+    }
+
+    /// Play video
+    func playVideo() {
+        videoActionPublisher.send(.play)
+    }
+
+    /// Pause video
+    func pauseVideo() {
+        videoActionPublisher.send(.pause)
+    }
+
+    /// Jump forward 10 seconds
+    func jumpVideoForward() {
+        videoActionPublisher.send(.jumpForward)
+    }
+
+    /// Jump backward 10 seconds
+    func jumpVideoBackward() {
+        videoActionPublisher.send(.jumpBackward)
+    }
+
+    /// Restart video from beginning
+    func restartVideo() {
+        videoActionPublisher.send(.restart)
+    }
+
+    /// Set the current video player reference
+    func setVideoPlayer(_ player: AVPlayer?) {
+        currentVideoPlayer = player
+    }
+
+    /// Check if we currently have a video playing
+    var hasVideoPlayer: Bool {
+        currentVideoPlayer != nil
+    }
+
+    /// Check if current selection is a video file
+    var selectedFileIsVideo: Bool {
+        selectedFile?.mediaType == .video
+    }
+
+    /// Validate filename for macOS compatibility
+    private func isValidFilename(_ filename: String) -> Bool {
+        let trimmedName = filename.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Check for empty or whitespace-only names
+        guard !trimmedName.isEmpty else { return false }
+
+        // Check if it's just an extension (starts with .)
+        guard !trimmedName.hasPrefix(".") else { return false }
+
+        // Check filename length (macOS limit is 255 bytes, but we'll use a conservative limit)
+        guard trimmedName.count <= 255 else { return false }
+
+        // Check for invalid characters on macOS
+        // macOS is more permissive than Windows, but these are still problematic
+        let invalidCharacters = CharacterSet(charactersIn: ":\0")
+        guard trimmedName.rangeOfCharacter(from: invalidCharacters) == nil else { return false }
+
+        // Check for names that are just dots
+        guard trimmedName != "." && trimmedName != ".." else { return false }
+
+        // Check for control characters (0x00-0x1F and 0x7F)
+        for char in trimmedName.unicodeScalars {
+            if char.value <= 0x1F || char.value == 0x7F {
+                return false
+            }
+        }
+
+        return true
     }
 }

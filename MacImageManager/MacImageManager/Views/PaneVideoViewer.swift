@@ -7,11 +7,13 @@
 
 import SwiftUI
 import AVKit
+import Combine
 
 struct PaneVideoViewer: View {
     let videoUrl: URL?
-
+    @EnvironmentObject private var browserModel: BrowserModel
     @State private var player: AVPlayer?
+    @State private var cancellables = Set<AnyCancellable>()
 
     var body: some View {
         Group {
@@ -43,6 +45,7 @@ struct PaneVideoViewer: View {
         }
         .onAppear {
             loadVideo(from: videoUrl)
+            setupVideoActionSubscription()
         }
         .onDisappear {
             cleanup()
@@ -58,11 +61,59 @@ struct PaneVideoViewer: View {
         let newPlayer = AVPlayer(playerItem: playerItem)
 
         self.player = newPlayer
+
+        // Update the browser model with the current player reference
+        browserModel.setVideoPlayer(newPlayer)
     }
 
     private func cleanup() {
         player?.pause()
         player = nil
+        cancellables.removeAll()
+
+        // Clear the browser model's player reference
+        browserModel.setVideoPlayer(nil)
+    }
+
+    private func setupVideoActionSubscription() {
+        browserModel.videoActionPublisher
+            .sink { [weak browserModel] action in
+                guard let player = browserModel?.currentVideoPlayer else { return }
+                handleVideoAction(action, for: player)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func handleVideoAction(_ action: BrowserModel.VideoAction, for player: AVPlayer) {
+        switch action {
+        case .play:
+            player.play()
+
+        case .pause:
+            player.pause()
+
+        case .toggle:
+            if player.timeControlStatus == .playing {
+                player.pause()
+            } else {
+                player.play()
+            }
+
+        case .jumpForward:
+            let currentTime = player.currentTime()
+            let newTime = CMTimeAdd(currentTime, CMTime(seconds: 10, preferredTimescale: 1))
+            player.seek(to: newTime)
+
+        case .jumpBackward:
+            let currentTime = player.currentTime()
+            let newTime = CMTimeSubtract(currentTime, CMTime(seconds: 10, preferredTimescale: 1))
+            let startTime = CMTime.zero
+            player.seek(to: CMTimeMaximum(newTime, startTime))
+
+        case .restart:
+            player.seek(to: CMTime.zero)
+            player.play()
+        }
     }
 
 

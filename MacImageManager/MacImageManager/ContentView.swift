@@ -11,12 +11,16 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     // Use EnvironmentObject to access the shared model
     @EnvironmentObject private var browserModel: BrowserModel
-    @State private var selectedFile: FileItem?
+    @FocusState private var activePane: ActivePane?
+
+    enum ActivePane {
+        case browser, viewer
+    }
 
     // View selection based on media type
     @ViewBuilder
     private var mediaViewer: some View {
-        if let file = selectedFile {
+        if let file = browserModel.selectedFile {
             switch file.mediaType {
             case .staticImage, .unknown:
                 PaneImageViewer(selectedImage: file.url)
@@ -58,11 +62,13 @@ struct ContentView: View {
     var body: some View {
         HSplitView {
             // Left pane - File browser
-            PaneFileBrowserView(selectedImage: $selectedFile)
+            PaneFileBrowserView(selectedImage: $browserModel.selectedFile)
                 .frame(minWidth: 250, maxWidth: 400)
-
+                .focused($activePane, equals: .browser)
+            
             // Right pane - Media viewer
             mediaViewer
+                .focused($activePane, equals: .viewer)
                 .fileImporter(
                     isPresented: $browserModel.showingFileImporter,
                     allowedContentTypes: [.folder],
@@ -94,7 +100,23 @@ struct ContentView: View {
                 }
                 .onChange(of: browserModel.currentDirectory) { _, _ in
                     // Clear the selected image when navigating to a different directory
-                    selectedFile = nil
+                    browserModel.selectedFile = nil
+                }
+                .onKeyPress(.space) {
+                    if activePane == .viewer && browserModel.selectedFileIsVideo {
+                        browserModel.toggleVideoPlayback()
+                        return .handled
+                    }
+                    return .ignored
+                }
+                .onKeyPress(phases: .down) { keyPress in
+                    if keyPress.characters == "r" && keyPress.modifiers.contains(.command) {
+                        if browserModel.canRenameSelectedFile {
+                            browserModel.startRenamingSelectedFile()
+                            return .handled
+                        }
+                    }
+                    return .ignored
                 }
         }
     }
