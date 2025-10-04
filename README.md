@@ -1,55 +1,49 @@
 # Mac Image Manager
 
-A modern, native macOS application for viewing and managing images, built with SwiftUI.
+A modern, native macOS application for viewing and managing images.
 
-## Features
+## ✨ Features
 
-- **Split-View Interface**: File browser on the left, image viewer on the right
-- **Image Viewer**:
+- **Clean Interface**
+  - File browser on the left, image viewer on the right
+- **Image Viewer**
   - Supports common image formats (JPG, JPEG, PNG, GIF, BMP, TIFF, HEIC, WEBP, SVG, ICO)
-  - Automatic aspect ratio fitting
-  - Smooth scrolling for large images
-  - Loading indicators for better UX
-- **File Browser**:
+  - View animated GIFs and videos
+- **File Browser**
   - Easy directory navigation
-  - Starts in user's Documents, Desktop, or Home directory
-  - Adjustable sidebar width (200-400px)
-  - File system integration
+- **Batch Actions**
+  - Mass-rename files
+  - Mass-move/copy files
 
-## Requirements
+## 📸 Screenshots
+
+- Image viewer:
+
+  ![mac-image-manager_image-viewer](MacImageManager/MacImageManager/Assets.xcassets/Preview/preview1.imageset/Preview1.png)
+
+- GIF viewer:
+
+  ![mac-image-manager_gif-viewer](MacImageManager/MacImageManager/Assets.xcassets/Preview/preview3.imageset/Preview3.png)
+
+- Video viewer:
+
+  ![mac-image-manager_video-viewer](MacImageManager/MacImageManager/Assets.xcassets/Preview/preview2.imageset/Preview2.png)
+
+## ⚙️ Requirements
 
 - macOS (built with SwiftUI)
 - Xcode 15+ for development
 
-## Project Structure
-
-```swift
-MacImageManager/
-├── ContentView.swift         # Main split view layout
-├── MacImageManagerApp.swift  # App entry point
-├── Models/
-│   └── DirectoryBrowserModel.swift  # File system operations
-└── Views/
-    ├── FileBrowserRowView.swift     # File list item view
-    ├── PaneFileBrowserView.swift    # Left sidebar browser
-    └── PaneImageViewer.swift        # Right pane image viewer
-```
-
-## Development
-
-This project is actively under development. Planned features include:
-
-- File operations (move, copy)
-- Drag-and-drop support
-- Context menus for file operations
-- Keyboard shortcuts
+## 🛣️ Roadmap
 
 I'm basically looking to update my old [EOSIM App](https://eosim.sourceforge.net).
 
-## Repository
+## 🔗 Repository
 
 - GitHub: [https://github.com/gitbrent/mac-image-manager](https://github.com/gitbrent/mac-image-manager)
 
-## License
+## 📜 License
 
-See [LICENSE](LICENSE) for details.
+Copyright © 2025-present [Brent Ely](https://github.com/gitbrent/)
+
+MIT. See [LICENSE](LICENSE) for details.
