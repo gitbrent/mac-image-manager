@@ -30,6 +30,35 @@ class BrowserModel: ObservableObject {
 
     private let fileManager = FileManager.default
 
+    // Helper function to determine if a file could be a media file using UTType
+    private func isPotentialMediaFile(_ item: FileItem) -> Bool {
+        // If we have a UTType, check if it's media-related or if it's nil (unknown)
+        guard let uti = item.uti else {
+            // No UTType means the system couldn't identify it - could be a media file without proper extension
+            return true
+        }
+
+        // Allow known media types
+        if uti.conforms(to: .image) || uti.conforms(to: .movie) || uti.conforms(to: .audiovisualContent) {
+            return true
+        }
+
+        // Explicitly exclude known non-media types
+        if uti.conforms(to: .sourceCode) ||
+           uti.conforms(to: .json) ||
+           uti.conforms(to: .xml) ||
+           uti.conforms(to: .plainText) ||
+           uti.conforms(to: .archive) ||
+           uti.conforms(to: .executable) ||
+           uti.conforms(to: .application) {
+            return false
+        }
+
+        // If it's an unknown type that doesn't conform to known non-media types, allow it
+        // This covers potential media files with unusual extensions or no extensions
+        return true
+    }
+
     init() {
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first
         let desktopURL = fileManager.urls(for: .desktopDirectory, in: .userDomainMask).first
@@ -111,7 +140,18 @@ class BrowserModel: ObservableObject {
 
             fileItems.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
 
-            self.items = fileItems
+            // Filter to only show directories and potential media files
+            let filteredItems = fileItems.filter { item in
+                // Always show directories for navigation
+                if item.isDirectory {
+                    return true
+                }
+
+                // Show files that could be media files using UTType
+                return isPotentialMediaFile(item)
+            }
+
+            self.items = filteredItems
             // Prune cache to current directory entries to bound memory usage
             let currentURLs = Set(fileItems.map { $0.url })
             fileItemCache = fileItemCache.filter { currentURLs.contains($0.key) }
