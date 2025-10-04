@@ -31,7 +31,7 @@ struct MacImageManagerApp: App {
 
             // Replace the new item commands
             CommandGroup(replacing: .newItem) {}
-            
+
             // Remove the (⌘W) "Close" item from `File`
             CommandGroup(replacing: .saveItem) {}
 
@@ -43,6 +43,12 @@ struct MacImageManagerApp: App {
                 .keyboardShortcut("o", modifiers: .command)
 
                 Divider()
+
+                Button("Go Up One Level") {
+                    browserModel.navigateUp()
+                }
+                .keyboardShortcut(.upArrow, modifiers: .command)
+                .disabled(!browserModel.canNavigateUp)
 
                 Button("Rename File") {
                     browserModel.startRenamingSelectedFile()
@@ -98,4 +104,3 @@ struct MacImageManagerApp: App {
         }
     }
 }
-
