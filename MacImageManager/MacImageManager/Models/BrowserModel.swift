@@ -20,6 +20,7 @@ class BrowserModel: ObservableObject {
     @Published var isRenamingFile = false
     @Published var renamingText = ""
     @Published var currentVideoPlayer: AVPlayer?
+    @Published var shouldFocusSearchField = false
 
     enum VideoAction {
         case play, pause, toggle, jumpForward, jumpBackward, restart
@@ -259,6 +260,15 @@ class BrowserModel: ObservableObject {
     var canRenameSelectedFile: Bool {
         guard let file = selectedFile else { return false }
         return !file.isDirectory // For now, only allow renaming files, not directories
+    }
+
+    /// Focus the search field in the browser
+    func focusSearchField() {
+        shouldFocusSearchField = true
+        // Reset the flag after a short delay to allow for repeated triggers
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.shouldFocusSearchField = false
+        }
     }
 
     /// Start renaming the currently selected file

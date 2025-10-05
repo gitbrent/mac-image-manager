@@ -15,6 +15,7 @@ struct PaneFileBrowserView: View {
     @EnvironmentObject var browserModel: BrowserModel
     @Binding var selectedImage: FileItem?
     @FocusState private var isListFocused: Bool
+    @FocusState private var isSearchFieldFocused: Bool
     @State private var searchText = ""
 
     private func clearSearch() {
@@ -61,7 +62,12 @@ struct PaneFileBrowserView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 1: Navigation header
-            NavigationHeader(browserModel: browserModel, searchText: $searchText, clearSearch: clearSearch)
+            NavigationHeader(
+                browserModel: browserModel,
+                searchText: $searchText,
+                isSearchFieldFocused: $isSearchFieldFocused,
+                clearSearch: clearSearch
+            )
             // 2: divider
             Divider()
 
@@ -183,6 +189,11 @@ struct PaneFileBrowserView: View {
                 }
             }
         }
+        .onChange(of: browserModel.shouldFocusSearchField) { _, shouldFocus in
+            if shouldFocus {
+                isSearchFieldFocused = true
+            }
+        }
     }
 
     private func navigateToNextImage(direction: NavigationDirection) {
@@ -219,6 +230,7 @@ struct PaneFileBrowserView: View {
 struct NavigationHeader: View {
     @ObservedObject var browserModel: BrowserModel
     @Binding var searchText: String
+    @FocusState.Binding var isSearchFieldFocused: Bool
     let clearSearch: () -> Void
 
     var body: some View {
@@ -258,6 +270,7 @@ struct NavigationHeader: View {
 
                     TextField("Search...", text: $searchText)
                         .textFieldStyle(.plain)
+                        .focused($isSearchFieldFocused)
                         .onKeyPress(.escape) {
                             clearSearch()
                             return .handled

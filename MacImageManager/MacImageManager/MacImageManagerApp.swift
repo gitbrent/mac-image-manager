@@ -50,6 +50,11 @@ struct MacImageManagerApp: App {
                 .keyboardShortcut(.upArrow, modifiers: .command)
                 .disabled(!browserModel.canNavigateUp)
 
+                Button("Search") {
+                    browserModel.focusSearchField()
+                }
+                .keyboardShortcut("f", modifiers: .command)
+
                 Button("Rename File") {
                     browserModel.startRenamingSelectedFile()
                 }
