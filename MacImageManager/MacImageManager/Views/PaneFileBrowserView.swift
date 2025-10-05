@@ -17,19 +17,37 @@ struct PaneFileBrowserView: View {
     @FocusState private var isListFocused: Bool
     @State private var searchText = ""
 
-    // Computed property to filter items based on search text
+    // Computed property to filter media files based on search text (excludes directories)
     private var filteredItems: [FileItem] {
+        let mediaFiles = browserModel.items.filter { !$0.isDirectory }
+
         if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            return browserModel.items
+            return mediaFiles
         } else {
-            return browserModel.items.filter { item in
-                // Always show directories for navigation
-                if item.isDirectory {
-                    return true
-                }
-                // Filter files by name containing search text
-                return item.name.localizedCaseInsensitiveContains(searchText)
+            return mediaFiles.filter { item in
+                item.name.localizedCaseInsensitiveContains(searchText)
             }
+        }
+    }
+
+    // Computed property for directories (for navigation) - hide when filtering
+    private var directories: [FileItem] {
+        // Hide directories when filtering (when search text is not empty)
+        if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return []
+        }
+        return browserModel.items.filter { $0.isDirectory }
+    }
+
+    // Computed property for file count display
+    private var fileCountText: String {
+        let count = filteredItems.count
+        if count == 0 {
+            return "No items"
+        } else if count == 1 {
+            return "Found 1 item"
+        } else {
+            return "Found \(count) items"
         }
     }
     var body: some View {
@@ -38,7 +56,21 @@ struct PaneFileBrowserView: View {
             NavigationHeader(browserModel: browserModel, searchText: $searchText)
             // 2: divider
             Divider()
-                        // 3: File list or no results view
+
+            // 3: File count label
+            if !searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                HStack {
+                    Spacer()
+                    Text(fileCountText)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.vertical, 4)
+                    Spacer()
+                }
+                .background(Color.secondary.opacity(0.05))
+            }
+
+            // 4: File list or no results view
             if filteredItems.isEmpty && !searchText.isEmpty {
                 // No results state
                 VStack(spacing: 20) {
@@ -56,11 +88,11 @@ struct PaneFileBrowserView: View {
                     }
 
                     VStack(spacing: 8) {
-                        Text("No files match your search")
+                        Text("No items match your search")
                             .font(.headline)
                             .foregroundColor(.primary)
 
-                        Text("Sorry, no files matching \"\(searchText)\" were found.")
+                        Text("Sorry, no items matching \"\(searchText)\" were found.")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -77,26 +109,37 @@ struct PaneFileBrowserView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 ScrollViewReader { proxy in
-                    List(filteredItems, id: \.id, selection: $selectedImage) { item in
-                        FileBrowserRowView(item: item)
-                            .environmentObject(browserModel)
-                            .tag(item)
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                if item.isDirectory {
-                                    browserModel.navigateInto(item: item)
-                                    // Scroll to top when navigating into a directory
-                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                                        if let firstItem = filteredItems.first {
-                                            withAnimation(.easeInOut(duration: 0.3)) {
-                                                proxy.scrollTo(firstItem.id, anchor: .top)
+                    List(selection: $selectedImage) {
+                        // Show directories first (for navigation) - only when not filtering
+                        if !directories.isEmpty {
+                            ForEach(directories, id: \.id) { item in
+                                FileBrowserRowView(item: item)
+                                    .environmentObject(browserModel)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        browserModel.navigateInto(item: item)
+                                        // Scroll to top when navigating into a directory
+                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                            if let firstItem = directories.first {
+                                                withAnimation(.easeInOut(duration: 0.3)) {
+                                                    proxy.scrollTo(firstItem.id, anchor: .top)
+                                                }
                                             }
                                         }
                                     }
-                                } else {
+                            }
+                        }
+
+                        // Show filtered media files
+                        ForEach(filteredItems, id: \.id) { item in
+                            FileBrowserRowView(item: item)
+                                .environmentObject(browserModel)
+                                .tag(item)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
                                     selectedImage = item
                                 }
-                            }
+                        }
                     }
                     .focused($isListFocused)
                     .onKeyPress(.upArrow) {
@@ -121,9 +164,10 @@ struct PaneFileBrowserView: View {
                     .onChange(of: browserModel.currentDirectory) { _, _ in
                         // Also scroll to top when using the "up" navigation button
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                            if let firstItem = filteredItems.first {
+                            let firstItem = directories.first ?? filteredItems.first
+                            if let item = firstItem {
                                 withAnimation(.easeInOut(duration: 0.3)) {
-                                    proxy.scrollTo(firstItem.id, anchor: .top)
+                                    proxy.scrollTo(item.id, anchor: .top)
                                 }
                             }
                         }
@@ -203,7 +247,7 @@ struct NavigationHeader: View {
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
 
-                    TextField("Search files...", text: $searchText)
+                    TextField("Search...", text: $searchText)
                         .textFieldStyle(.plain)
 
                     if !searchText.isEmpty {
