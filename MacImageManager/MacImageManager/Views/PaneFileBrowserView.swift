@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+enum NavigationDirection {
+    case up, down
+}
+
 struct PaneFileBrowserView: View {
     @EnvironmentObject var browserModel: BrowserModel
     @Binding var selectedImage: FileItem?
@@ -41,6 +45,14 @@ struct PaneFileBrowserView: View {
                         }
                 }
                 .focused($isListFocused)
+                .onKeyPress(.upArrow) {
+                    navigateToNextImage(direction: .up)
+                    return .handled
+                }
+                .onKeyPress(.downArrow) {
+                    navigateToNextImage(direction: .down)
+                    return .handled
+                }
                 .onAppear {
                     isListFocused = true
                 }
@@ -63,6 +75,36 @@ struct PaneFileBrowserView: View {
                     }
                 }
             }
+        }
+    }
+
+    private func navigateToNextImage(direction: NavigationDirection) {
+        // Get only viewable media files (staticImage, animatedGif, and video)
+        let mediaFiles = browserModel.items.filter { item in
+            item.mediaType == .staticImage || item.mediaType == .animatedGif || item.mediaType == .video
+        }
+
+        guard !mediaFiles.isEmpty else { return }
+
+        // If no media is currently selected, select the first or last media based on direction
+        guard let currentSelection = selectedImage,
+              let currentIndex = mediaFiles.firstIndex(of: currentSelection) else {
+            selectedImage = direction == .down ? mediaFiles.first : mediaFiles.last
+            return
+        }
+
+        // Navigate to next/previous media file
+        switch direction {
+        case .down:
+            if currentIndex < mediaFiles.count - 1 {
+                selectedImage = mediaFiles[currentIndex + 1]
+            }
+            // If at the end, do nothing (don't wrap around)
+        case .up:
+            if currentIndex > 0 {
+                selectedImage = mediaFiles[currentIndex - 1]
+            }
+            // If at the beginning, do nothing (don't wrap around)
         }
     }
 }

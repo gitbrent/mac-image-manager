@@ -58,7 +58,7 @@ struct FileBrowserRowView: View {
                 browserModel.selectedFile = item
                 browserModel.startRenamingSelectedFile()
             }
-            .keyboardShortcut("r", modifiers: .command)
+            .keyboardShortcut(.return, modifiers: [])
             .disabled(item.isDirectory) // TODO: For now, disable directory renaming
 
             Button("Delete") {

@@ -53,7 +53,7 @@ struct MacImageManagerApp: App {
                 Button("Rename File") {
                     browserModel.startRenamingSelectedFile()
                 }
-                .keyboardShortcut("r", modifiers: .command)
+                .keyboardShortcut(.return, modifiers: [])
                 .disabled(!browserModel.canRenameSelectedFile)
 
                 Button("Delete File") {
