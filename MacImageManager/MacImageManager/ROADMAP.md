@@ -3,6 +3,7 @@
 ## FEATURES: app
 
 - OPTIONS: e.g., sort folders first (BrowserModel > loadCurrentDirectory())
+- Ensure HIG compliance and ensure Accessability implementation/support exists
 
 ## FEATURES: browser
 
@@ -13,7 +14,7 @@
 - BRANCH: add miulti-select of row items (as a precursor to planned file ops)
 - FEATURE: mass-rename (fancy modal showing real results using same funcgtion call. e.g., "IMG001" > "Mastodon-001")
 
-## FEATURES: gif viewer
+## FEATURES: gif-viewer
 
 - option to view max size or normal size
 
