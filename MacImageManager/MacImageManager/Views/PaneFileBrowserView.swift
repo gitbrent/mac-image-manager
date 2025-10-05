@@ -61,13 +61,55 @@ struct PaneFileBrowserView: View {
     }
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 1: Navigation header
-            NavigationHeader(
-                browserModel: browserModel,
-                searchText: $searchText,
-                isSearchFieldFocused: $isSearchFieldFocused,
-                clearSearch: clearSearch
-            )
+            // 1: Navigation header with breadcrumb
+            VStack(spacing: 8) {
+                // Breadcrumb navigation
+                BreadcrumbNavigationView(browserModel: browserModel)
+
+                // File count display
+                HStack {
+                    Spacer()
+                    Text("\(browserModel.supportedFileCount) items")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+
+                // Search field
+                HStack {
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+
+                        TextField("Search...", text: $searchText)
+                            .textFieldStyle(.plain)
+                            .focused($isSearchFieldFocused)
+                            .onKeyPress(.escape) {
+                                clearSearch()
+                                return .handled
+                            }
+
+                        if !searchText.isEmpty {
+                            Button(action: {
+                                clearSearch()
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Clear search")
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(6)
+                }
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             // 2: divider
             Divider()
 
@@ -224,78 +266,6 @@ struct PaneFileBrowserView: View {
             }
             // If at the beginning, do nothing (don't wrap around)
         }
-    }
-}
-
-struct NavigationHeader: View {
-    @ObservedObject var browserModel: BrowserModel
-    @Binding var searchText: String
-    @FocusState.Binding var isSearchFieldFocused: Bool
-    let clearSearch: () -> Void
-
-    var body: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Button(action: {
-                    browserModel.navigateUp()
-                }) {
-                    Image(systemName: "chevron.up")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.primary)
-                }
-                .buttonStyle(.plain)
-                .frame(width: 24, height: 24)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(4)
-                .disabled(!browserModel.canNavigateUp)
-                .help("Go up one level")
-
-                Text(browserModel.currentDirectoryName)
-                    .font(.headline)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-
-                Spacer()
-
-                Text("\(browserModel.supportedFileCount) items")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            HStack {
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-
-                    TextField("Search...", text: $searchText)
-                        .textFieldStyle(.plain)
-                        .focused($isSearchFieldFocused)
-                        .onKeyPress(.escape) {
-                            clearSearch()
-                            return .handled
-                        }
-
-                    if !searchText.isEmpty {
-                        Button(action: {
-                            clearSearch()
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                        .help("Clear search")
-                    }
-                }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(6)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
     }
 }
 

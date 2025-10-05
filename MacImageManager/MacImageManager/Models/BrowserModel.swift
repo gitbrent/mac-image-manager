@@ -21,6 +21,7 @@ class BrowserModel: ObservableObject {
     @Published var renamingText = ""
     @Published var currentVideoPlayer: AVPlayer?
     @Published var shouldFocusSearchField = false
+    @Published var pathComponents: [PathComponent] = []
 
     enum VideoAction {
         case play, pause, toggle, jumpForward, jumpBackward, restart
@@ -28,6 +29,9 @@ class BrowserModel: ObservableObject {
 
     // Cache to speed up metadata recomputation in large directories
     private var fileItemCache: [URL: FileItem] = [:]
+
+    // Volume manager for breadcrumb navigation
+    @Published var volumeManager = VolumeManager()
 
     private let fileManager = FileManager.default
 
@@ -218,6 +222,34 @@ class BrowserModel: ObservableObject {
         let homeDirectory = fileManager.homeDirectoryForCurrentUser
         canNavigateUp = currentDirectory.path != homeDirectory.path &&
                        currentDirectory.pathComponents.count > homeDirectory.pathComponents.count
+
+        // Update path components for breadcrumb navigation
+        updatePathComponents()
+    }
+
+    private func updatePathComponents() {
+        pathComponents = volumeManager.generatePathComponents(for: currentDirectory)
+    }
+
+    // Navigate to a specific path component (breadcrumb navigation)
+    func navigateToPathComponent(_ component: PathComponent) {
+        currentDirectory = component.url
+        Task {
+            await loadCurrentDirectory()
+        }
+    }
+
+    // Get sibling directories for dropdown functionality
+    func getSiblingDirectories(for component: PathComponent) async -> [FileItem] {
+        return await volumeManager.getSiblingDirectories(for: component.url)
+    }
+
+    // Navigate to a different volume
+    func navigateToVolume(_ volume: VolumeInfo) {
+        currentDirectory = volume.url
+        Task {
+            await loadCurrentDirectory()
+        }
     }
 
     // Convenience method for keyboard navigation
