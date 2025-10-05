@@ -17,6 +17,14 @@ struct PaneFileBrowserView: View {
     @FocusState private var isListFocused: Bool
     @State private var searchText = ""
 
+    private func clearSearch() {
+        searchText = ""
+        // Restore focus to the list after clearing search
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            isListFocused = true
+        }
+    }
+
     // Computed property to filter media files based on search text (excludes directories)
     private var filteredItems: [FileItem] {
         let mediaFiles = browserModel.items.filter { !$0.isDirectory }
@@ -53,7 +61,7 @@ struct PaneFileBrowserView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 1: Navigation header
-            NavigationHeader(browserModel: browserModel, searchText: $searchText)
+            NavigationHeader(browserModel: browserModel, searchText: $searchText, clearSearch: clearSearch)
             // 2: divider
             Divider()
 
@@ -67,7 +75,7 @@ struct PaneFileBrowserView: View {
                         .padding(.vertical, 4)
                     Spacer()
                 }
-                .background(Color.secondary.opacity(0.05))
+                .background(Color.secondary.opacity(0.15))
             }
 
             // 4: File list or no results view
@@ -100,7 +108,7 @@ struct PaneFileBrowserView: View {
                     }
 
                     Button("Clear search") {
-                        searchText = ""
+                        clearSearch()
                     }
                     .buttonStyle(.bordered)
 
@@ -211,6 +219,7 @@ struct PaneFileBrowserView: View {
 struct NavigationHeader: View {
     @ObservedObject var browserModel: BrowserModel
     @Binding var searchText: String
+    let clearSearch: () -> Void
 
     var body: some View {
         VStack(spacing: 8) {
@@ -249,10 +258,14 @@ struct NavigationHeader: View {
 
                     TextField("Search...", text: $searchText)
                         .textFieldStyle(.plain)
+                        .onKeyPress(.escape) {
+                            clearSearch()
+                            return .handled
+                        }
 
                     if !searchText.isEmpty {
                         Button(action: {
-                            searchText = ""
+                            clearSearch()
                         }) {
                             Image(systemName: "xmark.circle.fill")
                                 .font(.system(size: 14))
