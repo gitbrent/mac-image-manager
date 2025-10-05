@@ -7,11 +7,12 @@
 
 ## FEATURES: browser
 
+- fix: close Volume browser once selection is made (and add tooltip for that btn)
+- fix: when selection goes offscreen (eg: arrow down out of view), scroll view
+- enh: when an item is deleted, select the next one down (or up, or nothing)
 - add: filter by type (ex: "GIF")
-- add: filter by search field ("one piece flag")
 - add: a new file menu item and functionality: create folder
-- add: locations (e.g., "iCloud" or USB drives)
-- BRANCH: add miulti-select of row items (as a precursor to planned file ops)
+- BRANCH: add multi-select of row items (as a precursor to planned file ops)
 - FEATURE: mass-rename (fancy modal showing real results using same funcgtion call. e.g., "IMG001" > "Mastodon-001")
 
 ## FEATURES: gif-viewer
