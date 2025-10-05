@@ -1,10 +1,17 @@
 # Development Roadmap
 
+## FEATURES: app
+
+- OPTIONS: e.g., sort folders first (BrowserModel > loadCurrentDirectory())
+
 ## FEATURES: browser
 
-- add: filter by type
-- add: options: e.g., sort folders first (BrowserModel > loadCurrentDirectory())
-- add: a new file menu item and functionality to create a new folder
+- add: filter by type (ex: "GIF")
+- add: filter by search field ("one piece flag")
+- add: a new file menu item and functionality: create folder
+- add: locations (e.g., "iCloud" or USB drives)
+- BRANCH: add miulti-select of row items (as a precursor to planned file ops)
+- FEATURE: mass-rename (fancy modal showing real results using same funcgtion call. e.g., "IMG001" > "Mastodon-001")
 
 ## FEATURES: gif viewer
 
