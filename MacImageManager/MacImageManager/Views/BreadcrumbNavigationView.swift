@@ -40,6 +40,9 @@ struct BreadcrumbNavigationView: View {
                 .cornerRadius(4)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Select volume")
+            .accessibilityHint("Choose a different storage volume to browse")
+            .help("Select volume")
             .popover(isPresented: $showingVolumeMenu) {
                 VolumeMenuView(browserModel: browserModel, isPresented: $showingVolumeMenu)
             }
@@ -76,6 +79,10 @@ struct BreadcrumbNavigationView: View {
                 .cornerRadius(4)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Navigate to parent folder")
+            .accessibilityHint("Show path hierarchy and navigate to parent directories")
+            .accessibilityValue(fullPathText)
+            .help("Navigate to parent folder")
             .popover(isPresented: $showingPathDropdown) {
                 PathDropdownView(browserModel: browserModel, isPresented: $showingPathDropdown)
             }
@@ -100,6 +107,13 @@ struct BreadcrumbNavigationView: View {
 struct VolumeMenuView: View {
     @ObservedObject var browserModel: BrowserModel
     @Binding var isPresented: Bool
+    @State private var selectedVolumeIndex: Int = 0
+    @FocusState private var isFocused: Bool
+
+    private var currentVolumeIndex: Int {
+        let currentVolumeURL = browserModel.volumeManager.getVolumeInfo(for: browserModel.currentDirectory)?.url
+        return browserModel.volumeManager.volumes.firstIndex { $0.url == currentVolumeURL } ?? 0
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -108,6 +122,7 @@ struct VolumeMenuView: View {
                 Text("Volumes")
                     .font(.headline)
                     .foregroundColor(.primary)
+                    .accessibilityAddTraits(.isHeader)
                 Spacer()
             }
             .padding(.horizontal, 12)
@@ -118,7 +133,9 @@ struct VolumeMenuView: View {
             // Volume list
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(browserModel.volumeManager.volumes, id: \.url) { volume in
+                    ForEach(Array(browserModel.volumeManager.volumes.enumerated()), id: \.element.url) { index, volume in
+                        let isCurrentVolume = browserModel.volumeManager.getVolumeInfo(for: browserModel.currentDirectory)?.url == volume.url
+
                         Button(action: {
                             browserModel.navigateToVolume(volume)
                             isPresented = false
@@ -131,7 +148,7 @@ struct VolumeMenuView: View {
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(volume.name)
-                                        .font(.system(size: 13, weight: .medium))
+                                        .font(.system(size: 13, weight: isCurrentVolume ? .semibold : .medium))
                                         .foregroundColor(.primary)
 
                                     if let freeSpace = volume.freeSpace,
@@ -149,106 +166,239 @@ struct VolumeMenuView: View {
                                 }
 
                                 Spacer()
+
+                                if isCurrentVolume {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(.blue)
+                                        .accessibilityLabel("Currently selected")
+                                }
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .background(Color.secondary.opacity(0.0))
+                        .accessibilityLabel(volume.name)
+                        .accessibilityHint(isCurrentVolume ? "Currently selected volume" : "Navigate to \(volume.name)")
+                        .accessibilityAddTraits(isCurrentVolume ? [.isSelected] : [])
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(
+                                    index == selectedVolumeIndex && isFocused
+                                        ? Color.secondary.opacity(0.2)
+                                        : (isCurrentVolume ? Color.blue.opacity(0.1) : Color.clear)
+                                )
+                        )
                         .onHover { isHovering in
-                            // Add hover effect if needed
+                            if isHovering {
+                                selectedVolumeIndex = index
+                            }
                         }
+                        .animation(.easeInOut(duration: 0.1), value: selectedVolumeIndex)
+                        .animation(.easeInOut(duration: 0.1), value: isCurrentVolume)
                     }
                 }
             }
             .frame(maxHeight: 300)
         }
         .frame(minWidth: 280, maxWidth: 320)
+        .focused($isFocused)
+        .onAppear {
+            selectedVolumeIndex = currentVolumeIndex
+            isFocused = true
+        }
+        .onKeyPress(.upArrow) {
+            if selectedVolumeIndex > 0 {
+                selectedVolumeIndex -= 1
+            }
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            if selectedVolumeIndex < browserModel.volumeManager.volumes.count - 1 {
+                selectedVolumeIndex += 1
+            }
+            return .handled
+        }
+        .onKeyPress(.return) {
+            let selectedVolume = browserModel.volumeManager.volumes[selectedVolumeIndex]
+            browserModel.navigateToVolume(selectedVolume)
+            isPresented = false
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            isPresented = false
+            return .handled
+        }
     }
 }
 
 struct PathDropdownView: View {
     @ObservedObject var browserModel: BrowserModel
     @Binding var isPresented: Bool
+    @State private var selectedPathIndex: Int = 0
+    @FocusState private var isFocused: Bool
+
+    private var currentPathIndex: Int {
+        return browserModel.pathComponents.count - 1
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Header
-            HStack {
-                Text("Go to")
-                    .font(.headline)
-                    .foregroundColor(.primary)
-                Spacer()
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-
+            headerView
             Divider()
+            pathListView
+        }
+        .frame(minWidth: 250, idealWidth: 300)
+        .focused($isFocused)
+        .onAppear {
+            selectedPathIndex = currentPathIndex
+            isFocused = true
+        }
+        .onKeyPress(.upArrow) {
+            if selectedPathIndex > 0 {
+                selectedPathIndex -= 1
+            }
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            if selectedPathIndex < browserModel.pathComponents.count - 1 {
+                selectedPathIndex += 1
+            }
+            return .handled
+        }
+        .onKeyPress(.return) {
+            let selectedComponent = browserModel.pathComponents[selectedPathIndex]
+            browserModel.navigateToPathComponent(selectedComponent)
+            isPresented = false
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            isPresented = false
+            return .handled
+        }
+    }
 
-            // Path levels
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(browserModel.pathComponents.enumerated()), id: \.element.url) { index, component in
-                        Button(action: {
+    private var headerView: some View {
+        HStack {
+            Text("Go to")
+                .font(.headline)
+                .foregroundColor(.primary)
+                .accessibilityAddTraits(.isHeader)
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
+    private var pathListView: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                ForEach(Array(browserModel.pathComponents.enumerated()), id: \.element.url) { index, component in
+                    PathComponentRow(
+                        component: component,
+                        index: index,
+                        totalCount: browserModel.pathComponents.count,
+                        selectedIndex: selectedPathIndex,
+                        isFocused: isFocused,
+                        onTap: {
                             browserModel.navigateToPathComponent(component)
                             isPresented = false
-                        }) {
-                            HStack(spacing: 8) {
-                                // Indentation based on level
-                                HStack(spacing: 0) {
-                                    ForEach(0..<index, id: \.self) { level in
-                                        Rectangle()
-                                            .fill(Color.secondary.opacity(0.3))
-                                            .frame(width: 1, height: 20)
-                                            .padding(.trailing, 15)
-                                    }
-                                }
-
-                                Image(systemName: component.icon)
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 16)
-
-                                Text(component.name)
-                                    .font(.system(size: 13, weight: index == browserModel.pathComponents.count - 1 ? .semibold : .regular))
-                                    .foregroundColor(index == browserModel.pathComponents.count - 1 ? .primary : .secondary)
-                                    .lineLimit(1)
-                                    .truncationMode(.middle)
-
-                                Spacer()
-
-                                if index == browserModel.pathComponents.count - 1 {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .foregroundColor(.blue)
-                                }
+                        },
+                        onHover: { isHovering in
+                            if isHovering {
+                                selectedPathIndex = index
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
-                        .background(
-                            index == browserModel.pathComponents.count - 1
-                                ? Color.blue.opacity(0.1)
-                                : Color.clear
-                        )
-                        .onHover { isHovering in
-                            // Could add hover effects here
-                        }
-
-                        // Add separator except for last item
-                        if index < browserModel.pathComponents.count - 1 {
-                            Divider()
-                                .padding(.leading, CGFloat(12 + (index * 16) + 24))
-                        }
-                    }
+                    )
                 }
             }
-            .frame(idealHeight: 250, maxHeight: 400)
         }
-        .frame(minWidth: 250, idealWidth: 350)
+        .frame(idealHeight: 200, maxHeight: 500)
+    }
+}
+
+// MARK: - Helper Components
+
+struct PathComponentRow: View {
+    let component: PathComponent
+    let index: Int
+    let totalCount: Int
+    let selectedIndex: Int
+    let isFocused: Bool
+    let onTap: () -> Void
+    let onHover: (Bool) -> Void
+
+    private var isCurrentLocation: Bool {
+        index == totalCount - 1
+    }
+
+    var body: some View {
+        Button(action: onTap) {
+            rowContent
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(component.name)
+        .accessibilityHint(isCurrentLocation ? "Current location" : "Navigate to \(component.name)")
+        .accessibilityAddTraits(isCurrentLocation ? [.isSelected] : [])
+        .background(backgroundView)
+        .onHover(perform: onHover)
+        .animation(.easeInOut(duration: 0.1), value: selectedIndex)
+        .animation(.easeInOut(duration: 0.1), value: isCurrentLocation)
+    }
+
+    private var rowContent: some View {
+        HStack(spacing: 8) {
+            Image(systemName: component.icon)
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+                .frame(width: 16)
+
+            Text(component.name)
+                .font(.system(size: 13, weight: isCurrentLocation ? .semibold : .medium))
+                .foregroundColor(isCurrentLocation ? .primary : .secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+
+            Spacer()
+
+            /*if !isCurrentLocation {
+                levelIndicator
+            }*/
+
+            if isCurrentLocation {
+                currentLocationIndicator
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
+    }
+
+    private var levelIndicator: some View {
+        Text("Level \(totalCount - index - 1)")
+            .font(.system(size: 10))
+            .foregroundColor(.secondary.opacity(0.6))
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Color.secondary.opacity(0.1))
+            .cornerRadius(3)
+    }
+
+    private var currentLocationIndicator: some View {
+        Image(systemName: "checkmark")
+            .font(.system(size: 12, weight: .medium))
+            .foregroundColor(.blue)
+            .accessibilityLabel("Current location")
+    }
+
+    private var backgroundView: some View {
+        RoundedRectangle(cornerRadius: 4)
+            .fill(
+                index == selectedIndex && isFocused
+                    ? Color.secondary.opacity(0.2)
+                    : (isCurrentLocation ? Color.blue.opacity(0.1) : Color.clear)
+            )
     }
 }
 
