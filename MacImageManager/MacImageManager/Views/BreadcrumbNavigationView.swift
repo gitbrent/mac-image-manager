@@ -41,7 +41,7 @@ struct BreadcrumbNavigationView: View {
             }
             .buttonStyle(.plain)
             .popover(isPresented: $showingVolumeMenu) {
-                VolumeMenuView(browserModel: browserModel)
+                VolumeMenuView(browserModel: browserModel, isPresented: $showingVolumeMenu)
             }
 
             // Full-length path dropdown
@@ -77,7 +77,7 @@ struct BreadcrumbNavigationView: View {
             }
             .buttonStyle(.plain)
             .popover(isPresented: $showingPathDropdown) {
-                PathDropdownView(browserModel: browserModel)
+                PathDropdownView(browserModel: browserModel, isPresented: $showingPathDropdown)
             }
         }
     }
@@ -88,18 +88,18 @@ struct BreadcrumbNavigationView: View {
             return "/"
         }
 
-        // Skip the volume name and show the path from the volume root
-        let pathComponents = components.dropFirst()
-        if pathComponents.isEmpty {
-            return components.first?.name ?? "/"
+        // Show only the current directory name
+        if let currentComponent = components.last {
+            return currentComponent.name
         }
 
-        return pathComponents.map { $0.name }.joined(separator: " › ")
+        return "/"
     }
 }
 
 struct VolumeMenuView: View {
     @ObservedObject var browserModel: BrowserModel
+    @Binding var isPresented: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -121,6 +121,7 @@ struct VolumeMenuView: View {
                     ForEach(browserModel.volumeManager.volumes, id: \.url) { volume in
                         Button(action: {
                             browserModel.navigateToVolume(volume)
+                            isPresented = false
                         }) {
                             HStack(spacing: 8) {
                                 Image(systemName: volume.icon)
@@ -169,6 +170,7 @@ struct VolumeMenuView: View {
 
 struct PathDropdownView: View {
     @ObservedObject var browserModel: BrowserModel
+    @Binding var isPresented: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -190,14 +192,16 @@ struct PathDropdownView: View {
                     ForEach(Array(browserModel.pathComponents.enumerated()), id: \.element.url) { index, component in
                         Button(action: {
                             browserModel.navigateToPathComponent(component)
+                            isPresented = false
                         }) {
                             HStack(spacing: 8) {
                                 // Indentation based on level
                                 HStack(spacing: 0) {
-                                    ForEach(0..<index, id: \.self) { _ in
+                                    ForEach(0..<index, id: \.self) { level in
                                         Rectangle()
-                                            .fill(Color.clear)
-                                            .frame(width: 16, height: 1)
+                                            .fill(Color.secondary.opacity(0.3))
+                                            .frame(width: 1, height: 20)
+                                            .padding(.trailing, 15)
                                     }
                                 }
 
@@ -242,9 +246,9 @@ struct PathDropdownView: View {
                     }
                 }
             }
-            .frame(maxHeight: 250)
+            .frame(idealHeight: 250, maxHeight: 400)
         }
-        .frame(minWidth: 220, maxWidth: 350)
+        .frame(minWidth: 250, idealWidth: 350)
     }
 }
 
@@ -262,5 +266,5 @@ struct PathDropdownView: View {
     }
 
     return BreadcrumbPreviewContainer()
-        .frame(width: 500, height: 200)
+        .frame(width: 400, height: 200)
 }
