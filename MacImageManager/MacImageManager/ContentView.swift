@@ -63,61 +63,61 @@ struct ContentView: View {
         HSplitView {
             // Left pane - File browser
             PaneFileBrowserView(selectedImage: $browserModel.selectedFile)
-                .frame(minWidth: 250, maxWidth: 400)
+                .frame(minWidth: 250, idealWidth: 300, maxWidth: 400)
                 .focused($activePane, equals: .browser)
-            
+
             // Right pane - Media viewer
             mediaViewer
                 .focused($activePane, equals: .viewer)
-                .fileImporter(
-                    isPresented: $browserModel.showingFileImporter,
-                    allowedContentTypes: [.folder],
-                    allowsMultipleSelection: false
-                ) { result in
-                    switch result {
-                    case .success(let urls):
-                        if let folderUrl = urls.first {
-                            Task {
-                                let folderItem = await FileItem(
-                                    url: folderUrl,
-                                    name: folderUrl.lastPathComponent,
-                                    isDirectory: true,
-                                    fileSize: 0,
-                                    modificationDate: Date(),
-                                    uti: .folder
-                                )
-                                browserModel.navigateInto(item: folderItem)
-                            }
-                        }
-                    case .failure(let error):
-                        print("Failed to import folder: \(error.localizedDescription)")
-                    }
-                }
-                .onAppear {
+        }
+        .fileImporter(
+            isPresented: $browserModel.showingFileImporter,
+            allowedContentTypes: [.folder],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let folderUrl = urls.first {
                     Task {
-                        await browserModel.loadInitialDirectory()
+                        let folderItem = await FileItem(
+                            url: folderUrl,
+                            name: folderUrl.lastPathComponent,
+                            isDirectory: true,
+                            fileSize: 0,
+                            modificationDate: Date(),
+                            uti: .folder
+                        )
+                        browserModel.navigateInto(item: folderItem)
                     }
                 }
-                .onChange(of: browserModel.currentDirectory) { _, _ in
-                    // Clear the selected image when navigating to a different directory
-                    browserModel.selectedFile = nil
+            case .failure(let error):
+                print("Failed to import folder: \(error.localizedDescription)")
+            }
+        }
+        .onAppear {
+            Task {
+                await browserModel.loadInitialDirectory()
+            }
+        }
+        .onChange(of: browserModel.currentDirectory) { _, _ in
+            // Clear the selected image when navigating to a different directory
+            browserModel.selectedFile = nil
+        }
+        .onKeyPress(.space) {
+            if activePane == .viewer && browserModel.selectedFileIsVideo {
+                browserModel.toggleVideoPlayback()
+                return .handled
+            }
+            return .ignored
+        }
+        .onKeyPress(phases: .down) { keyPress in
+            if keyPress.characters == "r" && keyPress.modifiers.contains(.command) {
+                if browserModel.canRenameSelectedFile {
+                    browserModel.startRenamingSelectedFile()
+                    return .handled
                 }
-                .onKeyPress(.space) {
-                    if activePane == .viewer && browserModel.selectedFileIsVideo {
-                        browserModel.toggleVideoPlayback()
-                        return .handled
-                    }
-                    return .ignored
-                }
-                .onKeyPress(phases: .down) { keyPress in
-                    if keyPress.characters == "r" && keyPress.modifiers.contains(.command) {
-                        if browserModel.canRenameSelectedFile {
-                            browserModel.startRenamingSelectedFile()
-                            return .handled
-                        }
-                    }
-                    return .ignored
-                }
+            }
+            return .ignored
         }
     }
 }
