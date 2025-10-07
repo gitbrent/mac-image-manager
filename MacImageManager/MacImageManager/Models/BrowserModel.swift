@@ -95,6 +95,10 @@ class BrowserModel: ObservableObject {
         items.filter { $0.mediaType != .unknown && !$0.isDirectory }.count
     }
 
+    var folderCount: Int {
+        items.filter { $0.isDirectory }.count
+    }
+
     @MainActor func loadInitialDirectory() async {
         await loadCurrentDirectory()
     }
