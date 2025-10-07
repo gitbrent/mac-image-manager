@@ -82,7 +82,7 @@ struct BreadcrumbNavigationView: View {
             .accessibilityLabel("Navigate to parent folder")
             .accessibilityHint("Show path hierarchy and navigate to parent directories")
             .accessibilityValue(fullPathText)
-            .help("Navigate to parent folder")
+            .help("Select volume location")
             .popover(isPresented: $showingPathDropdown) {
                 PathDropdownView(browserModel: browserModel, isPresented: $showingPathDropdown)
             }
@@ -282,7 +282,7 @@ struct PathDropdownView: View {
 
     private var headerView: some View {
         HStack {
-            Text("Go to")
+            Text("Location")
                 .font(.headline)
                 .foregroundColor(.primary)
                 .accessibilityAddTraits(.isHeader)
