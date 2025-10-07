@@ -74,7 +74,7 @@ struct BreadcrumbNavigationView: View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Color.secondary.opacity(0.05))
                 .cornerRadius(4)
             }
@@ -87,6 +87,7 @@ struct BreadcrumbNavigationView: View {
                 PathDropdownView(browserModel: browserModel, isPresented: $showingPathDropdown)
             }
         }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private var fullPathText: String {
