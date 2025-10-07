@@ -7,9 +7,8 @@
 
 ## FEATURES: browser
 
-- fix: close Volume browser once selection is made (and add tooltip for that btn)
 - fix: when selection goes offscreen (eg: arrow down out of view), scroll view
-- enh: when an item is deleted, select the next one down (or up, or nothing)
+- add: when an item is deleted, select the next one down (or up, or nothing)
 - add: filter by type (ex: "GIF")
 - add: a new file menu item and functionality: create folder
 - BRANCH: add multi-select of row items (as a precursor to planned file ops)
