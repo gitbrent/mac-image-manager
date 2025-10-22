@@ -19,7 +19,7 @@ struct FileBrowserRowView: View {
             Image(systemName: item.iconName)
                 .font(.system(size: 24))
                 .symbolRenderingMode(.hierarchical)
-                .foregroundStyle(tint(for: item))
+                .foregroundStyle(item.tintColor)
                 .frame(width: 32, height: 32)
 
             if browserModel.isRenamingFile && browserModel.selectedFile?.id == item.id {
@@ -83,27 +83,6 @@ struct FileBrowserRowView: View {
                 }
             }
         }
-    }
-
-    private func tint(for item: FileItem) -> Color {
-        if item.isDirectory { return .blue }
-        guard let type = item.uti else { return .secondary }
-
-        if type == .livePhoto { return .yellow }
-        if type.conforms(to: .gif) { return .pink }
-        if type == .svg { return .green }
-        if type.conforms(to: .rawImage) { return .indigo }
-        if type == .heic || type == .heif { return .orange }
-        if type.conforms(to: .image) { return .teal }
-        if type.conforms(to: .movie) { return .red }
-        if type == .pdf { return .brown }
-        if type.conforms(to: .archive) { return .brown }
-        if type.conforms(to: .audio) { return .mint }
-        if type.conforms(to: .json) { return .cyan }
-        if type.conforms(to: .sourceCode) { return .gray }
-        if type.conforms(to: .plainText) { return .gray }
-
-        return .secondary
     }
 }
 
