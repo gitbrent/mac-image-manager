@@ -83,46 +83,45 @@ struct PaneFileBrowserView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 1: Navigation header with breadcrumb
+            // 1: Navigation header with breadcrumb and search field
             VStack(spacing: 8) {
                 // Breadcrumb navigation
                 BreadcrumbNavigationView(browserModel: browserModel)
 
                 // Search field
                 HStack {
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
 
-                        TextField("Search...", text: $searchText)
-                            .textFieldStyle(.plain)
-                            .focused($isSearchFieldFocused)
-                            .onKeyPress(.escape) {
-                                clearSearch()
-                                return .handled
-                            }
-
-                        if !searchText.isEmpty {
-                            Button(action: {
-                                clearSearch()
-                            }) {
-                                Image(systemName: "xmark.circle.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                            .help("Clear search")
+                    TextField("Search...", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .focused($isSearchFieldFocused)
+                        .onKeyPress(.escape) {
+                            clearSearch()
+                            return .handled
                         }
+
+                    if !searchText.isEmpty {
+                        Button(action: {
+                            clearSearch()
+                        }) {
+                            Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                        }
+                        .buttonStyle(.plain)
+                        .help("Clear search")
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.secondary.opacity(0.1))
-                    .cornerRadius(6)
                 }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(Color.secondary.opacity(0.1))
+                .cornerRadius(6)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+
             // 2: divider
             Divider()
 
