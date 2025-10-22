@@ -80,6 +80,7 @@ struct PaneFileBrowserView: View {
     private var unknownCount: Int {
         browserModel.items.filter { $0.mediaType == .unknown && !$0.isDirectory }.count
     }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // 1: Navigation header with breadcrumb
@@ -306,7 +307,8 @@ struct PaneFileBrowserView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                }                // Total count
+                }
+                // Total count
                 Text("•")
                     .font(.caption)
                     .foregroundColor(.secondary)
