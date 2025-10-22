@@ -74,7 +74,7 @@ struct BreadcrumbNavigationView: View {
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: 400, alignment: .leading)
                 .background(Color.secondary.opacity(0.05))
                 .cornerRadius(4)
             }
