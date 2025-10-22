@@ -24,13 +24,13 @@ struct ContentView: View {
             switch file.mediaType {
             case .staticImage, .unknown:
                 PaneImageViewer(selectedImage: file.url)
-                    .frame(minWidth: 250)
+                    .frame(minWidth: 250, maxWidth: .infinity)
             case .animatedGif:
                 PaneGifViewer(gifUrl: file.url)
-                    .frame(minWidth: 250)
+                    .frame(minWidth: 250, maxWidth: .infinity)
             case .video:
                 PaneVideoViewer(videoUrl: file.url)
-                    .frame(minWidth: 250)
+                    .frame(minWidth: 250, maxWidth: .infinity)
             case .directory:
                 // Show placeholder for unsupported types
                 VStack {
@@ -68,6 +68,7 @@ struct ContentView: View {
 
             // Right pane - Media viewer
             mediaViewer
+                .frame(maxWidth: .infinity)
                 .focused($activePane, equals: .viewer)
         }
         .fileImporter(
