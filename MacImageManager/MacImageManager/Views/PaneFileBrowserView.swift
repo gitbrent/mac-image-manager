@@ -66,15 +66,6 @@ struct PaneFileBrowserView: View {
                 // Breadcrumb navigation
                 BreadcrumbNavigationView(browserModel: browserModel)
 
-                // File count display
-                HStack {
-                    Spacer()
-                    Text("\(browserModel.supportedFileCount) items")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Spacer()
-                }
-
                 // Search field
                 HStack {
                     HStack {
@@ -230,6 +221,17 @@ struct PaneFileBrowserView: View {
                     }
                 }
             }
+
+            // File count display at bottom
+            Divider()
+            HStack {
+                Spacer()
+                Text("\(browserModel.supportedFileCount) items")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            .padding(.vertical, 4)
         }
         .onChange(of: browserModel.shouldFocusSearchField) { _, shouldFocus in
             if shouldFocus {
