@@ -46,13 +46,32 @@ struct ContentView: View {
             }
         } else {
             // Empty state when no file is selected
-            VStack {
-                Image(systemName: "photo.on.rectangle")
-                    .font(.system(size: 64))
-                    .foregroundColor(.secondary)
-                Text("(select a file)")
-                    .font(.title2)
-                    .foregroundColor(.secondary)
+            VStack(spacing: 24) {
+                Spacer()
+
+                ZStack {
+                    Circle()
+                        .fill(Color.secondary.opacity(0.1))
+                        .frame(width: 120, height: 120)
+
+                    Image(systemName: "photo.on.rectangle.angled")
+                        .font(.system(size: 48, weight: .light))
+                        .foregroundColor(.secondary)
+                }
+
+                VStack(spacing: 8) {
+                    Text("(select a file)")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+
+                    Text("Choose an image or video from the browser to view it here.")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+
+                Spacer()
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Color(NSColor.controlBackgroundColor))
