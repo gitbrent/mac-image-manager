@@ -4,22 +4,23 @@ A modern, native macOS application for viewing and managing images, videos, and 
 
 ## ✨ Features
 
-- **Clean Interface**
-  - File browser on the left, media viewer on the right
+- **Modern macOS App**
+  - Modern: built on latest SwiftUI libraries with Xcode 26
+  - Lightning fast: utilizes built-in macOS file APIs to gather file types and props
+  - Clean, modern UI: file browser on the left, media viewer on the right
 - **Image Viewer**
   - Supports common image formats (JPG, JPEG, PNG, GIF, BMP, TIFF, HEIC, WEBP, SVG, ICO, RAW)
   - Supports common video formats (MP4, MPG, MOV, M4V, AVI)
   - Supports RAW image formats and large images
-  - View animated GIFs and videos
-  - Search by name
 - **GIF Viewer**
   - Play/puase GIFs
   - Adjust playback speed
-  - Keyframe forward/back
+  - Keyframe through frames
 - **File Browser**
-  - Volume brrowser supports removeable drives and iCloud drive
+  - Volume browser supports removeable drives and iCloud
   - Easy directory navigation
   - Rename files
+  - Search by name
 - **Batch Actions** (WIP)
   - Mass-rename files
   - Mass-move/copy files
@@ -40,7 +41,7 @@ Video viewer:
 
 ## ⚙️ Requirements
 
-- macOS (built with SwiftUI)
+- macOS (version 11?)
 - Xcode 15+ for development
 
 ## 🛣️ Roadmap
