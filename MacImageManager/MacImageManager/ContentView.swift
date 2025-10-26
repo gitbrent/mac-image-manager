@@ -60,17 +60,17 @@ struct ContentView: View {
     }
 
     var body: some View {
-        HSplitView {
-            // Left pane - File browser
+        NavigationSplitView {
+            // MARK: - Sidebar (Left Pane)
             PaneFileBrowserView(selectedImage: $browserModel.selectedFile)
-                .frame(minWidth: 250, idealWidth: 300, maxWidth: 400)
+                .navigationSplitViewColumnWidth(min: 250, ideal: 300, max: 500)
                 .focused($activePane, equals: .browser)
-
-            // Right pane - Media viewer
+        } detail: {
+            // MARK: - Detail (Right Pane)
             mediaViewer
-                .frame(maxWidth: .infinity)
                 .focused($activePane, equals: .viewer)
         }
+        .frame(minWidth: 300, maxWidth: .infinity, maxHeight: .infinity)
         .fileImporter(
             isPresented: $browserModel.showingFileImporter,
             allowedContentTypes: [.folder],
