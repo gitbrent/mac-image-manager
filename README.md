@@ -56,4 +56,4 @@ I'm basically looking to update my old [EOSIM App](https://eosim.sourceforge.net
 
 Copyright © 2025-present [Brent Ely](https://github.com/gitbrent/)
 
-MIT. See [LICENSE](LICENSE) for details.
+GPL. See [LICENSE](LICENSE) for details.
