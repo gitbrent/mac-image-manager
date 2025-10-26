@@ -90,7 +90,6 @@ struct PaneImageViewer: View {
         }
 
         // Set the new loading URL but keep the previous image
-        let previousURL = currentLoadingURL
         currentLoadingURL = url
 
         // Only clear the loaded image if we don't have any image yet

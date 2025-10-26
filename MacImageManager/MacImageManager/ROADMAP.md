@@ -3,17 +3,18 @@
 ## FEATURES: app
 
 - OPTIONS: e.g., sort folders first (BrowserModel > loadCurrentDirectory())
+- Ensure HIG compliance and ensure Accessability implementation/support exists
 
 ## FEATURES: browser
 
+- fix: when selection goes offscreen (eg: arrow down out of view), scroll view
+- add: when an item is deleted, select the next one down (or up, or nothing)
 - add: filter by type (ex: "GIF")
-- add: filter by search field ("one piece flag")
 - add: a new file menu item and functionality: create folder
-- add: locations (e.g., "iCloud" or USB drives)
-- BRANCH: add miulti-select of row items (as a precursor to planned file ops)
+- BRANCH: add multi-select of row items (as a precursor to planned file ops)
 - FEATURE: mass-rename (fancy modal showing real results using same funcgtion call. e.g., "IMG001" > "Mastodon-001")
 
-## FEATURES: gif viewer
+## FEATURES: gif-viewer
 
 - option to view max size or normal size
 
@@ -25,4 +26,5 @@
 ## FIXME
 
 - add: more menu items/keyboard shortcuts like {space} for Play/Pause of gif/video
-  - space only kinda works sometimes for play/pause
+- space only kinda works sometimes for play/pause
+- clear currently shown image on search

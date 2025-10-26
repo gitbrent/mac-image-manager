@@ -20,6 +20,8 @@ class BrowserModel: ObservableObject {
     @Published var isRenamingFile = false
     @Published var renamingText = ""
     @Published var currentVideoPlayer: AVPlayer?
+    @Published var shouldFocusSearchField = false
+    @Published var pathComponents: [PathComponent] = []
 
     enum VideoAction {
         case play, pause, toggle, jumpForward, jumpBackward, restart
@@ -27,6 +29,9 @@ class BrowserModel: ObservableObject {
 
     // Cache to speed up metadata recomputation in large directories
     private var fileItemCache: [URL: FileItem] = [:]
+
+    // Volume manager for breadcrumb navigation
+    @Published var volumeManager = VolumeManager()
 
     private let fileManager = FileManager.default
 
@@ -88,6 +93,10 @@ class BrowserModel: ObservableObject {
 
     var supportedFileCount: Int {
         items.filter { $0.mediaType != .unknown && !$0.isDirectory }.count
+    }
+
+    var folderCount: Int {
+        items.filter { $0.isDirectory }.count
     }
 
     @MainActor func loadInitialDirectory() async {
@@ -217,6 +226,34 @@ class BrowserModel: ObservableObject {
         let homeDirectory = fileManager.homeDirectoryForCurrentUser
         canNavigateUp = currentDirectory.path != homeDirectory.path &&
                        currentDirectory.pathComponents.count > homeDirectory.pathComponents.count
+
+        // Update path components for breadcrumb navigation
+        updatePathComponents()
+    }
+
+    private func updatePathComponents() {
+        pathComponents = volumeManager.generatePathComponents(for: currentDirectory)
+    }
+
+    // Navigate to a specific path component (breadcrumb navigation)
+    func navigateToPathComponent(_ component: PathComponent) {
+        currentDirectory = component.url
+        Task {
+            await loadCurrentDirectory()
+        }
+    }
+
+    // Get sibling directories for dropdown functionality
+    func getSiblingDirectories(for component: PathComponent) async -> [FileItem] {
+        return await volumeManager.getSiblingDirectories(for: component.url)
+    }
+
+    // Navigate to a different volume
+    func navigateToVolume(_ volume: VolumeInfo) {
+        currentDirectory = volume.url
+        Task {
+            await loadCurrentDirectory()
+        }
     }
 
     // Convenience method for keyboard navigation
@@ -259,6 +296,15 @@ class BrowserModel: ObservableObject {
     var canRenameSelectedFile: Bool {
         guard let file = selectedFile else { return false }
         return !file.isDirectory // For now, only allow renaming files, not directories
+    }
+
+    /// Focus the search field in the browser
+    func focusSearchField() {
+        shouldFocusSearchField = true
+        // Reset the flag after a short delay to allow for repeated triggers
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.shouldFocusSearchField = false
+        }
     }
 
     /// Start renaming the currently selected file
