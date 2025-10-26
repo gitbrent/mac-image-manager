@@ -26,4 +26,5 @@
 ## FIXME
 
 - add: more menu items/keyboard shortcuts like {space} for Play/Pause of gif/video
-  - space only kinda works sometimes for play/pause
+- space only kinda works sometimes for play/pause
+- clear currently shown image on search
