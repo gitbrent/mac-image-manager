@@ -166,7 +166,7 @@ struct FileItem: Identifiable, Hashable {
                     } else {
                         // Single frame GIF, treat as static image
                         self.mediaType = .staticImage
-                        self.iconName = FileItem.iconName(for: type)
+                        self.iconName = MediaType.staticImage.iconName
                         self.gifFrameCount = nil
                         self.gifFrameRate = nil
                         self.videoResolution = nil
