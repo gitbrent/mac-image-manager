@@ -245,79 +245,68 @@ struct PaneFileBrowserView: View {
 
             // File count display at bottom - breakdown by type
             Divider()
-            HStack(spacing: 12) {
+            HStack(spacing: 14) {
                 Spacer()
 
                 // Folders
                 if directoryCount > 0 {
-                    HStack(spacing: 2) {
+                    HStack(spacing: 4) {
                         Image(systemName: "folder.fill")
-                            .font(.system(size: 10))
+                            .font(.system(size: 16))
                             .foregroundColor(MediaType.directory.tintColor)
                         Text("\(directoryCount)")
-                            .font(.caption)
+                            .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
                 }
 
                 // Static Images
                 if staticImageCount > 0 {
-                    HStack(spacing: 2) {
+                    HStack(spacing: 4) {
                         Image(systemName: "photo")
-                            .font(.system(size: 10))
+                            .font(.system(size: 14))
                             .foregroundColor(MediaType.staticImage.tintColor)
                         Text("\(staticImageCount)")
-                            .font(.caption)
+                            .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
                 }
 
                 // Animated GIFs
                 if animatedGifCount > 0 {
-                    HStack(spacing: 2) {
+                    HStack(spacing: 4) {
                         Image(systemName: "rectangle.stack.badge.play")
-                            .font(.system(size: 10))
+                            .font(.system(size: 14))
                             .foregroundColor(MediaType.animatedGif.tintColor)
                         Text("\(animatedGifCount)")
-                            .font(.caption)
+                            .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
                 }
 
                 // Videos
                 if videoCount > 0 {
-                    HStack(spacing: 2) {
+                    HStack(spacing: 4) {
                         Image(systemName: "film")
-                            .font(.system(size: 10))
+                            .font(.system(size: 14))
                             .foregroundColor(MediaType.video.tintColor)
                         Text("\(videoCount)")
-                            .font(.caption)
+                            .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
                 }
 
                 // Unknown files
                 if unknownCount > 0 {
-                    HStack(spacing: 2) {
+                    HStack(spacing: 4) {
                         Image(systemName: "questionmark.square.dashed")
-                            .font(.system(size: 10))
+                            .font(.system(size: 14))
                             .foregroundColor(MediaType.unknown.tintColor)
                         Text("\(unknownCount)")
-                            .font(.caption)
+                            .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
                 }
-                // Total count
-                Text("•")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .opacity(0.5)
-
-                Text("\(browserModel.supportedFileCount) total")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .fontWeight(.medium)
-
                 Spacer()
             }
             .padding(.vertical, 6)
