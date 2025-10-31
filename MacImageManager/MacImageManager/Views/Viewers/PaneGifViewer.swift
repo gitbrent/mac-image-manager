@@ -217,32 +217,33 @@ struct PaneGifViewer: View {
                     // Controls (only show for custom viewer)
                     if !useWebView && !gifLoader.frames.isEmpty {
                         VStack(spacing: 12) {
-                            // Progress Slider with Frame Info
-                            VStack(spacing: 4) {
-                                HStack {
-                                    Slider(
-                                        value: Binding(
-                                            get: { Double(currentFrameIndex) },
-                                            set: { newValue in
-                                                currentFrameIndex = Int(newValue)
-                                            }
-                                        ),
-                                        in: 0...Double(max(0, gifLoader.frames.count - 1)),
-                                        step: 1.0
-                                    )
-                                    .controlSize(.large)
-                                    .tint(.white)
-                                    .disabled(isPlaying)
-                                }
-
-                                // Frame Info below slider
-                                Text("Frame \(currentFrameIndex + 1) / \(gifLoader.frames.count)")
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.7))
+                            // Progress Slider
+                            HStack {
+                                Slider(
+                                    value: Binding(
+                                        get: { Double(currentFrameIndex) },
+                                        set: { newValue in
+                                            currentFrameIndex = Int(newValue)
+                                        }
+                                    ),
+                                    in: 0...Double(max(0, gifLoader.frames.count - 1)),
+                                    step: 1.0
+                                )
+                                .controlSize(.large)
+                                .tint(.white)
+                                .disabled(isPlaying)
                             }
 
-                            // Primary Controls - Centered
+                            // Primary Controls Row
                             HStack(spacing: 20) {
+                                // Frame Info - Left side
+                                Text("Frame \(currentFrameIndex + 1) / \(gifLoader.frames.count)")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .frame(width: 220, alignment: .leading)
+
+                                Spacer()
+
                                 // Previous Frame
                                 Button(action: previousFrame) {
                                     Image(systemName: "backward.fill")
@@ -268,26 +269,26 @@ struct PaneGifViewer: View {
                                 }
                                 .buttonStyle(.plain)
                                 .disabled(isPlaying)
-                            }
-                            .frame(maxWidth: .infinity)
-
-                            // Speed Control - Bottom row
-                            HStack(spacing: 12) {
-                                Text("Speed")
-                                    .foregroundColor(.white.opacity(0.8))
-                                    .font(.caption)
-
-                                Slider(value: $animationSpeed, in: 0.25...3.0, step: 0.25)
-                                    .frame(maxWidth: 200)
-                                    .tint(.white.opacity(0.6))
-
-                                Text(String(format: "%.2fx", animationSpeed))
-                                    .foregroundColor(.white)
-                                    .font(.caption)
-                                    .frame(width: 45, alignment: .leading)
-                                    .monospacedDigit()
 
                                 Spacer()
+
+                                // Speed Control - Right side
+                                HStack(spacing: 8) {
+                                    Text("Speed")
+                                        .foregroundColor(.white.opacity(0.8))
+                                        .font(.system(size: 12))
+
+                                    Slider(value: $animationSpeed, in: 0.25...3.0, step: 0.25)
+                                        .frame(width: 120)
+                                        .tint(.white.opacity(0.6))
+
+                                    Text(String(format: "%.2fx", animationSpeed))
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 12))
+                                        .frame(width: 45, alignment: .leading)
+                                        .monospacedDigit()
+                                }
+                                .frame(width: 220, alignment: .trailing)
 
                                 // WebView Toggle - Hidden unless needed (only shown after error)
                                 if gifLoader.error != nil {
@@ -306,7 +307,7 @@ struct PaneGifViewer: View {
                         .background(Color.black.opacity(0.8))
                     }
                 }
-                .background(Color.black)
+                .background(Color.white.opacity(0.25))
             } else {
                 // Empty State
                 VStack {
