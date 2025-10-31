@@ -216,66 +216,94 @@ struct PaneGifViewer: View {
 
                     // Controls (only show for custom viewer)
                     if !useWebView && !gifLoader.frames.isEmpty {
-                        VStack(spacing: 8) {
-                            // Primary Controls
-                            HStack {
-                                // Play/Pause Button
+                        VStack(spacing: 12) {
+                            // Progress Slider with Frame Info
+                            VStack(spacing: 4) {
+                                HStack {
+                                    Slider(
+                                        value: Binding(
+                                            get: { Double(currentFrameIndex) },
+                                            set: { newValue in
+                                                currentFrameIndex = Int(newValue)
+                                            }
+                                        ),
+                                        in: 0...Double(max(0, gifLoader.frames.count - 1)),
+                                        step: 1.0
+                                    )
+                                    .controlSize(.large)
+                                    .tint(.white)
+                                    .disabled(isPlaying)
+                                }
+
+                                // Frame Info below slider
+                                Text("Frame \(currentFrameIndex + 1) / \(gifLoader.frames.count)")
+                                    .font(.caption)
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
+
+                            // Primary Controls - Centered
+                            HStack(spacing: 20) {
+                                // Previous Frame
+                                Button(action: previousFrame) {
+                                    Image(systemName: "backward.fill")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(isPlaying ? .white.opacity(0.3) : .white)
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(isPlaying)
+
+                                // Play/Pause Button - Larger and centered
                                 Button(action: togglePlayPause) {
                                     Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                        .font(.title)
+                                        .font(.system(size: 56))
                                         .foregroundColor(.white)
                                 }
                                 .buttonStyle(.plain)
 
-                                // Previous Frame
-                                Button(action: previousFrame) {
-                                    Image(systemName: "backward.frame.fill")
-                                        .font(.title2)
-                                        .foregroundColor(isPlaying ? .gray : .white)
-                                }
-                                .buttonStyle(.plain)
-                                .disabled(isPlaying)
-
                                 // Next Frame
                                 Button(action: nextFrame) {
-                                    Image(systemName: "forward.frame.fill")
-                                        .font(.title2)
-                                        .foregroundColor(isPlaying ? .gray : .white)
+                                    Image(systemName: "forward.fill")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(isPlaying ? .white.opacity(0.3) : .white)
                                 }
                                 .buttonStyle(.plain)
                                 .disabled(isPlaying)
+                            }
+                            .frame(maxWidth: .infinity)
+
+                            // Speed Control - Bottom row
+                            HStack(spacing: 12) {
+                                Text("Speed")
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .font(.caption)
+
+                                Slider(value: $animationSpeed, in: 0.25...3.0, step: 0.25)
+                                    .frame(maxWidth: 200)
+                                    .tint(.white.opacity(0.6))
+
+                                Text(String(format: "%.2fx", animationSpeed))
+                                    .foregroundColor(.white)
+                                    .font(.caption)
+                                    .frame(width: 45, alignment: .leading)
+                                    .monospacedDigit()
 
                                 Spacer()
 
-                                // WebView Toggle
-                                Button("WebView") {
-                                    stopAnimation()
-                                    useWebView = true
+                                // WebView Toggle - Hidden unless needed (only shown after error)
+                                if gifLoader.error != nil {
+                                    Button("WebView") {
+                                        stopAnimation()
+                                        useWebView = true
+                                    }
+                                    .buttonStyle(.bordered)
+                                    .foregroundColor(.white)
+                                    .controlSize(.small)
                                 }
-                                .buttonStyle(.bordered)
-                                .foregroundColor(.white)
-                            }
-
-                            // Speed Control
-                            HStack {
-                                Text("Speed")
-                                    .foregroundColor(.white)
-                                Slider(value: $animationSpeed, in: 0.25...3.0, step: 0.25)
-                                    .frame(maxWidth: 150)
-                                Text(String(format: "%.2fx", animationSpeed))
-                                    .foregroundColor(.white)
-                                    .frame(width: 50, alignment: .leading)
-                            }
-
-                            // Frame Info
-                            if !gifLoader.frames.isEmpty {
-                                Text("Frame \(currentFrameIndex + 1) / \(gifLoader.frames.count)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
                             }
                         }
-                        .padding()
-                        .background(Color.white.opacity(0.15))
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                        .background(Color.black.opacity(0.8))
                     }
                 }
                 .background(Color.black)
