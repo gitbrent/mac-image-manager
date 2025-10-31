@@ -42,8 +42,8 @@ Video viewer:
 
 ## ⚙️ Requirements
 
-- macOS (version 11?)
-- Xcode 15+ for development
+- macOS (min version 11 (?))
+- Xcode for development
 
 ## 🛣️ Roadmap
 
