@@ -34,7 +34,7 @@ Image viewer:
 
 GIF viewer:
 
-![mac-image-manager_gif-viewer](https://github.com/user-attachments/assets/1d26537c-2ec7-4f8c-99d1-cc4f5ea16c23)
+![mac-image-manager_gif-viewer](https://github.com/user-attachments/assets/121d81be-a74a-4586-8b55-f629dfb26c85)
 
 Video viewer:
 
