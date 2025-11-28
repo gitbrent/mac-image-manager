@@ -76,6 +76,31 @@ struct MacImageManagerApp: App {
                 .disabled(!browserModel.hasSelectedFile)
             }
 
+            // Add sorting commands to existing View menu
+            CommandGroup(after: .toolbar) {
+                Button("Sort by Name") {
+                    browserModel.setSortCriteria(.name)
+                }
+                .keyboardShortcut("1", modifiers: .command)
+
+                Button("Sort by Size") {
+                    browserModel.setSortCriteria(.size)
+                }
+                .keyboardShortcut("2", modifiers: .command)
+
+                Button("Sort by Date") {
+                    browserModel.setSortCriteria(.date)
+                }
+                .keyboardShortcut("3", modifiers: .command)
+
+                Divider()
+
+                Button("Toggle Sort Direction") {
+                    browserModel.toggleSortDirection()
+                }
+                .keyboardShortcut("s", modifiers: [.command, .shift])
+            }
+
             // Playback menu for video and GIF controls
             CommandMenu("Playback") {
                 // Common control

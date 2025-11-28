@@ -83,46 +83,76 @@ struct PaneFileBrowserView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // 1: Navigation header with breadcrumb and search field
+            // Navigation header with breadcrumb, search, and sort controls
             VStack(spacing: 8) {
                 // Breadcrumb navigation
                 BreadcrumbNavigationView(browserModel: browserModel)
 
-                // Search field
-                HStack {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
+                // Search and Sort controls in same row
+                HStack(spacing: 8) {
+                    // Search field
+                    HStack {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
 
-                    TextField("Search...", text: $searchText)
-                        .textFieldStyle(.plain)
-                        .focused($isSearchFieldFocused)
-                        .onKeyPress(.escape) {
-                            clearSearch()
-                            return .handled
-                        }
+                        TextField("Search...", text: $searchText)
+                            .textFieldStyle(.plain)
+                            .focused($isSearchFieldFocused)
+                            .onKeyPress(.escape) {
+                                clearSearch()
+                                return .handled
+                            }
 
-                    if !searchText.isEmpty {
-                        Button(action: {
-                            clearSearch()
-                        }) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.secondary)
+                        if !searchText.isEmpty {
+                            Button(action: {
+                                clearSearch()
+                            }) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Clear search")
                         }
-                        .buttonStyle(.plain)
-                        .help("Clear search")
                     }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(Color.secondary.opacity(0.1))
+                    .cornerRadius(6)
+
+                    // Sort controls
+                    Picker("", selection: $browserModel.sortBy) {
+                        ForEach(SortCriteria.allCases) { criteria in
+                            HStack {
+                                Image(systemName: criteria.iconName)
+                                Text(criteria.rawValue)
+                            }
+                            .tag(criteria)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .frame(width: 100)
+                    .onChange(of: browserModel.sortBy) { _, newValue in
+                        browserModel.setSortCriteria(newValue)
+                    }
+                    .help("Sort by")
+
+                    Button(action: {
+                        browserModel.toggleSortDirection()
+                    }) {
+                        Image(systemName: browserModel.sortAscending ? "chevron.up" : "chevron.down")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                    .help(browserModel.sortAscending ? "Ascending" : "Descending")
                 }
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-                .background(Color.secondary.opacity(0.1))
-                .cornerRadius(6)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.top, 2)
+            .padding(.bottom, 8)
 
-            // 2: divider
             Divider()
 
             // 3: File count label

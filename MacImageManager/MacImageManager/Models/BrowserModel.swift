@@ -11,6 +11,22 @@ import UniformTypeIdentifiers
 import Combine
 import AVKit
 
+enum SortCriteria: String, CaseIterable, Identifiable {
+    case name = "Name"
+    case size = "Size"
+    case date = "Date"
+
+    var id: String { rawValue }
+
+    var iconName: String {
+        switch self {
+        case .name: return "textformat"
+        case .size: return "chart.bar"
+        case .date: return "calendar"
+        }
+    }
+}
+
 class BrowserModel: ObservableObject {
     @Published var items: [FileItem] = []
     @Published var currentDirectory: URL
@@ -22,6 +38,8 @@ class BrowserModel: ObservableObject {
     @Published var currentVideoPlayer: AVPlayer?
     @Published var shouldFocusSearchField = false
     @Published var pathComponents: [PathComponent] = []
+    @Published var sortBy: SortCriteria = .name
+    @Published var sortAscending: Bool = true
 
     enum VideoAction {
         case play, pause, toggle, jumpForward, jumpBackward, restart
@@ -153,8 +171,6 @@ class BrowserModel: ObservableObject {
                 }
             }
 
-            fileItems.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-
             // Filter to only show directories and potential media files
             let filteredItems = fileItems.filter { item in
                 // Always show directories for navigation
@@ -166,7 +182,8 @@ class BrowserModel: ObservableObject {
                 return isPotentialMediaFile(item)
             }
 
-            self.items = filteredItems
+            // Sort the filtered items before assigning
+            self.items = sortItems(filteredItems)
             // Prune cache to current directory entries to bound memory usage
             let currentURLs = Set(fileItems.map { $0.url })
             fileItemCache = fileItemCache.filter { currentURLs.contains($0.key) }
@@ -217,6 +234,46 @@ class BrowserModel: ObservableObject {
         } catch {
             print("Cannot access directory \(item.url.path): \(error)")
         }
+    }
+
+    // MARK: - Sorting
+
+    /// Sort items based on current sort criteria and direction
+    func sortItems(_ items: [FileItem]) -> [FileItem] {
+        let sorted = items.sorted { item1, item2 in
+            // Always keep directories at the top, sorted by name
+            if item1.isDirectory && !item2.isDirectory {
+                return true
+            } else if !item1.isDirectory && item2.isDirectory {
+                return false
+            } else if item1.isDirectory && item2.isDirectory {
+                return item1.name.localizedCaseInsensitiveCompare(item2.name) == .orderedAscending
+            }
+
+            // Sort files based on criteria
+            switch sortBy {
+            case .name:
+                let comparison = item1.name.localizedCaseInsensitiveCompare(item2.name)
+                return sortAscending ? comparison == .orderedAscending : comparison == .orderedDescending
+            case .size:
+                return sortAscending ? item1.fileSize < item2.fileSize : item1.fileSize > item2.fileSize
+            case .date:
+                return sortAscending ? item1.modificationDate < item2.modificationDate : item1.modificationDate > item2.modificationDate
+            }
+        }
+        return sorted
+    }
+
+    /// Update sort criteria and re-sort items
+    func setSortCriteria(_ criteria: SortCriteria) {
+        sortBy = criteria
+        items = sortItems(items)
+    }
+
+    /// Toggle sort direction and re-sort items
+    func toggleSortDirection() {
+        sortAscending.toggle()
+        items = sortItems(items)
     }
 
     func isImageFile(_ item: FileItem) -> Bool {
@@ -509,4 +566,3 @@ class BrowserModel: ObservableObject {
         return true
     }
 }
-
