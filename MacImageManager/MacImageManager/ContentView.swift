@@ -124,7 +124,7 @@ struct ContentView: View {
             browserModel.selectedFile = nil
         }
         .onKeyPress(.space) {
-            if activePane == .viewer && browserModel.selectedFileIsVideo {
+            if browserModel.selectedFileIsVideo {
                 browserModel.toggleVideoPlayback()
                 return .handled
             }
