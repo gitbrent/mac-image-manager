@@ -185,6 +185,8 @@ struct PaneFileBrowserView: View {
                                     .environmentObject(browserModel)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
+                                        isSearchFieldFocused = false
+                                        isListFocused = true
                                         browserModel.navigateInto(item: item)
                                         // Scroll to top when navigating into a directory
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -205,6 +207,8 @@ struct PaneFileBrowserView: View {
                                 .tag(item)
                                 .contentShape(Rectangle())
                                 .onTapGesture {
+                                    isSearchFieldFocused = false
+                                    isListFocused = true
                                     selectedImage = item
                                 }
                         }
@@ -230,6 +234,9 @@ struct PaneFileBrowserView: View {
                         }
                     }
                     .onChange(of: browserModel.currentDirectory) { _, _ in
+                        // Unfocus search field when navigating
+                        isSearchFieldFocused = false
+                        isListFocused = true
                         // Also scroll to top when using the "up" navigation button
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                             let firstItem = directories.first ?? filteredItems.first
