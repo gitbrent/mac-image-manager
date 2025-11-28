@@ -127,6 +127,9 @@ struct ContentView: View {
             if browserModel.selectedFileIsVideo {
                 browserModel.toggleVideoPlayback()
                 return .handled
+            } else if browserModel.selectedFileIsGif {
+                browserModel.toggleGifPlayback()
+                return .handled
             }
             return .ignored
         }

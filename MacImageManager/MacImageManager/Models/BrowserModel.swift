@@ -27,11 +27,19 @@ class BrowserModel: ObservableObject {
         case play, pause, toggle, jumpForward, jumpBackward, restart
     }
 
+    enum GifAction {
+        case playPause, nextFrame, previousFrame
+    }
+
     // Cache to speed up metadata recomputation in large directories
     private var fileItemCache: [URL: FileItem] = [:]
 
     // Volume manager for breadcrumb navigation
     @Published var volumeManager = VolumeManager()
+
+    // Publishers for video and GIF control actions
+    let videoActionPublisher = PassthroughSubject<VideoAction, Never>()
+    let gifActionPublisher = PassthroughSubject<GifAction, Never>()
 
     private let fileManager = FileManager.default
 
@@ -84,8 +92,6 @@ class BrowserModel: ObservableObject {
 
         updateNavigationState()
     }
-
-    let videoActionPublisher = PassthroughSubject<VideoAction, Never>()
 
     var currentDirectoryName: String {
         currentDirectory.lastPathComponent
@@ -450,6 +456,28 @@ class BrowserModel: ObservableObject {
         selectedFile?.mediaType == .video
     }
 
+    // MARK: - GIF Control Actions
+
+    /// Toggle GIF playback (play/pause)
+    func toggleGifPlayback() {
+        gifActionPublisher.send(.playPause)
+    }
+
+    /// Go to next GIF frame
+    func nextGifFrame() {
+        gifActionPublisher.send(.nextFrame)
+    }
+
+    /// Go to previous GIF frame
+    func previousGifFrame() {
+        gifActionPublisher.send(.previousFrame)
+    }
+
+    /// Check if current selection is a GIF file
+    var selectedFileIsGif: Bool {
+        selectedFile?.mediaType == .animatedGif
+    }
+
     /// Validate filename for macOS compatibility
     private func isValidFilename(_ filename: String) -> Bool {
         let trimmedName = filename.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -481,3 +509,4 @@ class BrowserModel: ObservableObject {
         return true
     }
 }
+

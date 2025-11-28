@@ -76,35 +76,53 @@ struct MacImageManagerApp: App {
                 .disabled(!browserModel.hasSelectedFile)
             }
 
-            // Playback menu for video controls (inserted explicitly after our File operations)
+            // Playback menu for video and GIF controls
             CommandMenu("Playback") {
+                // Common control
                 Button("Play/Pause") {
-                    browserModel.toggleVideoPlayback()
+                    if browserModel.selectedFileIsVideo {
+                        browserModel.toggleVideoPlayback()
+                    } else if browserModel.selectedFileIsGif {
+                        browserModel.toggleGifPlayback()
+                    }
                 }
                 .keyboardShortcut(.space, modifiers: [])
-                .disabled(!browserModel.selectedFileIsVideo)
+                .disabled(!browserModel.selectedFileIsVideo && !browserModel.selectedFileIsGif)
 
                 Divider()
 
-                Button("Jump Backward 10s") {
-                    browserModel.jumpVideoBackward()
-                }
-                .keyboardShortcut(.leftArrow, modifiers: .command)
-                .disabled(!browserModel.selectedFileIsVideo)
+                // Video-specific controls
+                if browserModel.selectedFileIsVideo {
+                    Button("Jump Backward 10s") {
+                        browserModel.jumpVideoBackward()
+                    }
+                    .keyboardShortcut(.leftArrow, modifiers: .command)
 
-                Button("Jump Forward 10s") {
-                    browserModel.jumpVideoForward()
-                }
-                .keyboardShortcut(.rightArrow, modifiers: .command)
-                .disabled(!browserModel.selectedFileIsVideo)
+                    Button("Jump Forward 10s") {
+                        browserModel.jumpVideoForward()
+                    }
+                    .keyboardShortcut(.rightArrow, modifiers: .command)
 
-                Divider()
+                    Divider()
 
-                Button("Restart Video") {
-                    browserModel.restartVideo()
+                    Button("Restart Video") {
+                        browserModel.restartVideo()
+                    }
+                    .keyboardShortcut("r", modifiers: [.command, .option])
                 }
-                .keyboardShortcut("r", modifiers: [.command, .option])
-                .disabled(!browserModel.selectedFileIsVideo)
+
+                // GIF-specific controls
+                if browserModel.selectedFileIsGif {
+                    Button("Previous Frame") {
+                        browserModel.previousGifFrame()
+                    }
+                    .keyboardShortcut(.leftArrow, modifiers: .command)
+
+                    Button("Next Frame") {
+                        browserModel.nextGifFrame()
+                    }
+                    .keyboardShortcut(.rightArrow, modifiers: .command)
+                }
             }
         }
     }

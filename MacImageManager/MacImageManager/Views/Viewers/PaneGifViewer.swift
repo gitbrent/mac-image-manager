@@ -153,6 +153,7 @@ struct WebViewGifViewer: NSViewRepresentable {
 struct PaneGifViewer: View {
     let gifUrl: URL?
 
+    @EnvironmentObject private var browserModel: BrowserModel
     @StateObject private var gifLoader = GifLoader()
     @State private var currentFrameIndex: Int = 0
     @State private var isPlaying: Bool = true
@@ -160,6 +161,7 @@ struct PaneGifViewer: View {
     @State private var timer: Timer?
     @State private var useWebView: Bool = false
     @State private var currentLoadingURL: URL?
+    @State private var cancellables = Set<AnyCancellable>()
 
     var body: some View {
         Group {
@@ -332,10 +334,12 @@ struct PaneGifViewer: View {
         }
         .onAppear {
             loadGif(from: gifUrl)
+            setupGifActionSubscription()
         }
         .onDisappear {
             stopAnimation()
             gifLoader.cancel()
+            cancellables.removeAll()
         }
     }
 
@@ -350,6 +354,33 @@ struct PaneGifViewer: View {
     }
 
     // MARK: - Methods
+    private func setupGifActionSubscription() {
+        browserModel.gifActionPublisher
+            .sink { [self] action in
+                handleGifAction(action)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func handleGifAction(_ action: BrowserModel.GifAction) {
+        switch action {
+        case .playPause:
+            togglePlayPause()
+        case .nextFrame:
+            if isPlaying {
+                stopAnimation()
+                isPlaying = false
+            }
+            nextFrame()
+        case .previousFrame:
+            if isPlaying {
+                stopAnimation()
+                isPlaying = false
+            }
+            previousFrame()
+        }
+    }
+
     private func loadGif(from url: URL?) {
         stopAnimation()
         currentFrameIndex = 0
