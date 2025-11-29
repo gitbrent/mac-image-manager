@@ -60,27 +60,6 @@ struct PaneFileBrowserView: View {
         }
     }
 
-    // Computed properties for file type counts
-    private var directoryCount: Int {
-        browserModel.items.filter { $0.isDirectory }.count
-    }
-
-    private var staticImageCount: Int {
-        browserModel.items.filter { $0.mediaType == .staticImage }.count
-    }
-
-    private var animatedGifCount: Int {
-        browserModel.items.filter { $0.mediaType == .animatedGif }.count
-    }
-
-    private var videoCount: Int {
-        browserModel.items.filter { $0.mediaType == .video }.count
-    }
-
-    private var unknownCount: Int {
-        browserModel.items.filter { $0.mediaType == .unknown && !$0.isDirectory }.count
-    }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             // Navigation header with breadcrumb, search, and sort controls
@@ -321,72 +300,8 @@ struct PaneFileBrowserView: View {
 
             // File count display at bottom - breakdown by type
             Divider()
-            HStack(spacing: 14) {
-                Spacer()
-
-                // Folders
-                if directoryCount > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "folder.fill")
-                            .font(.system(size: 16))
-                            .foregroundColor(MediaType.directory.tintColor)
-                        Text("\(directoryCount)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                // Static Images
-                if staticImageCount > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "photo")
-                            .font(.system(size: 14))
-                            .foregroundColor(MediaType.staticImage.tintColor)
-                        Text("\(staticImageCount)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                // Animated GIFs
-                if animatedGifCount > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "rectangle.stack.badge.play")
-                            .font(.system(size: 14))
-                            .foregroundColor(MediaType.animatedGif.tintColor)
-                        Text("\(animatedGifCount)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                // Videos
-                if videoCount > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "film")
-                            .font(.system(size: 14))
-                            .foregroundColor(MediaType.video.tintColor)
-                        Text("\(videoCount)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                // Unknown files
-                if unknownCount > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "questionmark.square.dashed")
-                            .font(.system(size: 14))
-                            .foregroundColor(MediaType.unknown.tintColor)
-                        Text("\(unknownCount)")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
-                    }
-                }
-                Spacer()
-            }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 8)
+            FileMetricsView()
+                .environmentObject(browserModel)
         }
         .onChange(of: browserModel.shouldFocusSearchField) { _, shouldFocus in
             if shouldFocus {

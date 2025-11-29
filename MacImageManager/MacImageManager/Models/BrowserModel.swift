@@ -40,6 +40,7 @@ class BrowserModel: ObservableObject {
     @Published var pathComponents: [PathComponent] = []
     @Published var sortBy: SortCriteria = .name
     @Published var sortAscending: Bool = true
+    @Published var showDetailedMetrics: Bool = false
 
     enum VideoAction {
         case play, pause, toggle, jumpForward, jumpBackward, restart
@@ -564,5 +565,50 @@ class BrowserModel: ObservableObject {
         }
 
         return true
+    }
+
+    // MARK: - Metrics Display
+
+    /// Toggle between summary and detailed metrics view
+    func toggleMetricsDisplay() {
+        showDetailedMetrics.toggle()
+    }
+
+    /// Get file type counts for metrics display
+    var metricsData: [(mediaType: MediaType, count: Int)] {
+        let groups = Dictionary(grouping: items.filter { !$0.isDirectory }) { $0.mediaType }
+        return [
+            (mediaType: .staticImage, count: groups[.staticImage]?.count ?? 0),
+            (mediaType: .animatedGif, count: groups[.animatedGif]?.count ?? 0),
+            (mediaType: .video, count: groups[.video]?.count ?? 0),
+            (mediaType: .unknown, count: groups[.unknown]?.count ?? 0)
+        ].filter { $0.count > 0 }
+    }
+
+    /// Get total file size by media type
+    var metricsDataWithSize: [(mediaType: MediaType, count: Int, totalSize: Int)] {
+        let files = items.filter { !$0.isDirectory }
+        let groups = Dictionary(grouping: files) { $0.mediaType }
+
+        // Precompute counts
+        let staticImageCount = groups[.staticImage]?.count ?? 0
+        let animatedGifCount = groups[.animatedGif]?.count ?? 0
+        let videoCount = groups[.video]?.count ?? 0
+        let unknownCount = groups[.unknown]?.count ?? 0
+
+        // Precompute total sizes
+        let staticImageSize = (groups[.staticImage] ?? []).reduce(0) { $0 + $1.fileSize }
+        let animatedGifSize = (groups[.animatedGif] ?? []).reduce(0) { $0 + $1.fileSize }
+        let videoSize = (groups[.video] ?? []).reduce(0) { $0 + $1.fileSize }
+        let unknownSize = (groups[.unknown] ?? []).reduce(0) { $0 + $1.fileSize }
+
+        let result: [(mediaType: MediaType, count: Int, totalSize: Int)] = [
+            (mediaType: .staticImage, count: staticImageCount, totalSize: staticImageSize),
+            (mediaType: .animatedGif, count: animatedGifCount, totalSize: animatedGifSize),
+            (mediaType: .video, count: videoCount, totalSize: videoSize),
+            (mediaType: .unknown, count: unknownCount, totalSize: unknownSize)
+        ]
+
+        return result.filter { $0.count > 0 }
     }
 }

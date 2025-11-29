@@ -78,6 +78,13 @@ struct MacImageManagerApp: App {
 
             // Add sorting commands to existing View menu
             CommandGroup(after: .toolbar) {
+                Button(browserModel.showDetailedMetrics ? "Show Summary Metrics" : "Show Detailed Metrics") {
+                    browserModel.toggleMetricsDisplay()
+                }
+                .keyboardShortcut("m", modifiers: [.command, .shift])
+
+                Divider()
+
                 Button("Sort by Name") {
                     browserModel.setSortCriteria(.name)
                 }
