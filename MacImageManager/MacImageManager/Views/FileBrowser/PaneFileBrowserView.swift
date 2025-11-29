@@ -90,6 +90,72 @@ struct PaneFileBrowserView: View {
 
                 // Search and Sort controls in same row
                 HStack(spacing: 8) {
+                    // Sort controls with integrated direction
+                    Menu {
+                        ForEach(SortCriteria.allCases) { criteria in
+                            Button(action: {
+                                browserModel.setSortCriteria(criteria)
+                            }) {
+                                HStack {
+                                    Image(systemName: criteria.iconName)
+                                    Text(criteria.rawValue)
+                                    if browserModel.sortBy == criteria {
+                                        Spacer()
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+
+                        Divider()
+
+                        Button(action: {
+                            if !browserModel.sortAscending {
+                                browserModel.toggleSortDirection()
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "chevron.up")
+                                Text("Ascending")
+                                if browserModel.sortAscending {
+                                    Spacer()
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+
+                        Button(action: {
+                            if browserModel.sortAscending {
+                                browserModel.toggleSortDirection()
+                            }
+                        }) {
+                            HStack {
+                                Image(systemName: "chevron.down")
+                                Text("Descending")
+                                if !browserModel.sortAscending {
+                                    Spacer()
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: browserModel.sortBy.iconName)
+                                .font(.system(size: 12))
+                            Image(systemName: browserModel.sortAscending ? "chevron.up" : "chevron.down")
+                                .font(.system(size: 10))
+                        }
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.secondary.opacity(0.1))
+                        .cornerRadius(4)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Sorting options")
+                    .accessibilityHint("Choose a different sorting criteria and direction")
+                    .help("Sort options")
+
                     // Search field
                     HStack {
                         Image(systemName: "magnifyingglass")
@@ -120,33 +186,6 @@ struct PaneFileBrowserView: View {
                     .padding(.vertical, 4)
                     .background(Color.secondary.opacity(0.1))
                     .cornerRadius(6)
-
-                    // Sort controls
-                    Picker("", selection: $browserModel.sortBy) {
-                        ForEach(SortCriteria.allCases) { criteria in
-                            HStack {
-                                Image(systemName: criteria.iconName)
-                                Text(criteria.rawValue)
-                            }
-                            .tag(criteria)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .frame(width: 100)
-                    .onChange(of: browserModel.sortBy) { _, newValue in
-                        browserModel.setSortCriteria(newValue)
-                    }
-                    .help("Sort by")
-
-                    Button(action: {
-                        browserModel.toggleSortDirection()
-                    }) {
-                        Image(systemName: browserModel.sortAscending ? "chevron.up" : "chevron.down")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                    .help(browserModel.sortAscending ? "Ascending" : "Descending")
                 }
             }
             .padding(.horizontal, 12)
