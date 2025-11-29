@@ -197,10 +197,21 @@ struct PaneGifViewer: View {
                     } else if !gifLoader.frames.isEmpty {
                         // Custom frame-by-frame viewer
                         ScrollView([.horizontal, .vertical]) {
-                            Image(nsImage: currentFrame)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .containerRelativeFrame([.horizontal, .vertical])
+                            Group {
+                                if let scale = browserModel.zoomLevel.scale {
+                                    // Fixed scale (Actual Size or 50%)
+                                    Image(nsImage: currentFrame)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .scaleEffect(scale)
+                                } else {
+                                    // Zoom to Fit
+                                    Image(nsImage: currentFrame)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .containerRelativeFrame([.horizontal, .vertical])
+                                }
+                            }
                         }
                         .background(Color.black)
                     } else {
@@ -243,7 +254,7 @@ struct PaneGifViewer: View {
                                     Text("Frame")
                                         .font(.system(size: 16))
                                         .foregroundColor(.primary)
-                                    
+
                                     // Frame Info - Left side
                                     Text(" \(currentFrameIndex + 1) / \(gifLoader.frames.count)")
                                         .font(.system(size: 16))

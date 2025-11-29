@@ -13,6 +13,7 @@ struct PaneImageViewer: View {
     @State private var currentLoadingURL: URL?
     @State private var loadingTask: Task<Void, Never>?
     @State private var isLoading: Bool = false
+    @EnvironmentObject private var browserModel: BrowserModel
 
     var body: some View {
         Group {
@@ -21,10 +22,21 @@ struct PaneImageViewer: View {
                     // Show the loaded image (either current or previous)
                     if let loadedImage = loadedImage {
                         ScrollView([.horizontal, .vertical]) {
-                            Image(nsImage: loadedImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fit) // These 2 lines: fit image to view
-                                .containerRelativeFrame([.horizontal, .vertical]) // These 2 lines: fit image to view
+                            Group {
+                                if let scale = browserModel.zoomLevel.scale {
+                                    // Fixed scale (Actual Size or 50%)
+                                    Image(nsImage: loadedImage)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .scaleEffect(scale)
+                                } else {
+                                    // Zoom to Fit
+                                    Image(nsImage: loadedImage)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .containerRelativeFrame([.horizontal, .vertical])
+                                }
+                            }
                         }
                         .background(Color.black)
                     } else {

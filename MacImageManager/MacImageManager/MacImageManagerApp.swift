@@ -78,34 +78,72 @@ struct MacImageManagerApp: App {
 
             // Add sorting commands to existing View menu
             CommandGroup(after: .toolbar) {
-                Button(browserModel.showDetailedMetrics ? "Show Summary Metrics" : "Show Detailed Metrics") {
-                    browserModel.toggleMetricsDisplay()
-                }
+                Toggle("Show Detailed Metrics", isOn: Binding(
+                    get: { browserModel.showDetailedMetrics },
+                    set: { _ in browserModel.toggleMetricsDisplay() }
+                ))
                 .keyboardShortcut("m", modifiers: [.command, .shift])
 
                 Divider()
 
-                Button("Sort by Name") {
-                    browserModel.setSortCriteria(.name)
+                // Zoom options
+                Toggle("Actual Size", isOn: Binding(
+                    get: { browserModel.zoomLevel == .actual },
+                    set: { _ in browserModel.setZoomLevel(.actual) }
+                ))
+                .keyboardShortcut("0", modifiers: .command)
+
+                Button("Zoom In") {
+                    browserModel.setZoomLevel(.zoomIn)
                 }
+                .keyboardShortcut("+", modifiers: .command)
+
+                Button("Zoom Out") {
+                    browserModel.setZoomLevel(.zoomOut)
+                }
+                .keyboardShortcut("-", modifiers: .command)
+
+                Toggle("Zoom to Fit", isOn: Binding(
+                    get: { browserModel.zoomLevel == .fit },
+                    set: { _ in browserModel.setZoomLevel(.fit) }
+                ))
+                .keyboardShortcut("/", modifiers: .command)
+
+                Divider()
+
+                Toggle("Sort by Name", isOn: Binding(
+                    get: { browserModel.sortBy == .name },
+                    set: { _ in browserModel.setSortCriteria(.name) }
+                ))
                 .keyboardShortcut("1", modifiers: .command)
 
-                Button("Sort by Size") {
-                    browserModel.setSortCriteria(.size)
-                }
+                Toggle("Sort by Size", isOn: Binding(
+                    get: { browserModel.sortBy == .size },
+                    set: { _ in browserModel.setSortCriteria(.size) }
+                ))
                 .keyboardShortcut("2", modifiers: .command)
 
-                Button("Sort by Date") {
-                    browserModel.setSortCriteria(.date)
-                }
+                Toggle("Sort by Date", isOn: Binding(
+                    get: { browserModel.sortBy == .date },
+                    set: { _ in browserModel.setSortCriteria(.date) }
+                ))
                 .keyboardShortcut("3", modifiers: .command)
 
                 Divider()
 
-                Button("Toggle Sort Direction") {
-                    browserModel.toggleSortDirection()
-                }
+                Toggle("Ascending", isOn: Binding(
+                    get: { browserModel.sortAscending },
+                    set: { _ in browserModel.toggleSortDirection() }
+                ))
                 .keyboardShortcut("s", modifiers: [.command, .shift])
+
+                Toggle("Descending", isOn: Binding(
+                    get: { !browserModel.sortAscending },
+                    set: { _ in browserModel.toggleSortDirection() }
+                ))
+                .keyboardShortcut("d", modifiers: [.command, .shift])
+
+                Divider()
             }
 
             // Playback menu for video and GIF controls

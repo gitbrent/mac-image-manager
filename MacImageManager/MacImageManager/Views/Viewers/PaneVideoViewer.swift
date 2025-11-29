@@ -19,10 +19,28 @@ struct PaneVideoViewer: View {
         Group {
             if videoUrl != nil {
                 // Video Player with built-in controls
-                VideoPlayer(player: player)
-                    .background(Color.black)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(16)
+                GeometryReader { geometry in
+                    Group {
+                        if let scale = browserModel.zoomLevel.scale {
+                            // Fixed scale (Actual Size or 50%)
+                            ScrollView([.horizontal, .vertical]) {
+                                VideoPlayer(player: player)
+                                    .frame(
+                                        width: geometry.size.width * scale,
+                                        height: geometry.size.height * scale
+                                    )
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color.black)
+                        } else {
+                            // Zoom to Fit
+                            VideoPlayer(player: player)
+                                .background(Color.black)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .padding(16)
+                        }
+                    }
+                }
             } else {
                 // Empty State
                 VStack {

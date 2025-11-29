@@ -27,6 +27,28 @@ enum SortCriteria: String, CaseIterable, Identifiable {
     }
 }
 
+enum ZoomLevel: String, CaseIterable, Identifiable {
+    case fit = "Zoom to Fit"
+    case actual = "Actual Size"
+    case zoomIn = "Zoom In"
+    case zoomOut = "Zoom Out"
+
+    var id: String { rawValue }
+
+    var scale: CGFloat? {
+        switch self {
+        case .fit:
+            return nil // Dynamic fitting
+        case .actual:
+            return 1.0
+        case .zoomIn:
+            return 1.5
+        case .zoomOut:
+            return 0.5
+        }
+    }
+}
+
 class BrowserModel: ObservableObject {
     @Published var items: [FileItem] = []
     @Published var currentDirectory: URL
@@ -41,6 +63,7 @@ class BrowserModel: ObservableObject {
     @Published var sortBy: SortCriteria = .name
     @Published var sortAscending: Bool = true
     @Published var showDetailedMetrics: Bool = false
+    @Published var zoomLevel: ZoomLevel = .fit
 
     enum VideoAction {
         case play, pause, toggle, jumpForward, jumpBackward, restart
@@ -572,6 +595,13 @@ class BrowserModel: ObservableObject {
     /// Toggle between summary and detailed metrics view
     func toggleMetricsDisplay() {
         showDetailedMetrics.toggle()
+    }
+
+    // MARK: - Zoom Control
+
+    /// Set zoom level for image/video viewers
+    func setZoomLevel(_ level: ZoomLevel) {
+        zoomLevel = level
     }
 
     /// Get file type counts for metrics display
