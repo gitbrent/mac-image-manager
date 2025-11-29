@@ -214,16 +214,36 @@ class VolumeManager: ObservableObject {
     }
 
     func getVolumeInfo(for url: URL) -> VolumeInfo? {
-        return volumes.first { volume in
-            url.path.hasPrefix(volume.url.path)
+        // Normalize paths by resolving symlinks and standardizing
+        let normalizedPath = url.resolvingSymlinksInPath().standardized.path
+
+        // Find the volume with the longest matching prefix (most specific)
+        var bestMatch: VolumeInfo? = nil
+        var longestPrefixLength = 0
+
+        for volume in volumes {
+            let volumePath = volume.url.resolvingSymlinksInPath().standardized.path
+
+            if normalizedPath.hasPrefix(volumePath) {
+                let prefixLength = volumePath.count
+                if prefixLength > longestPrefixLength {
+                    bestMatch = volume
+                    longestPrefixLength = prefixLength
+                }
+            }
         }
+
+        return bestMatch
     }
 
     func generatePathComponents(for currentURL: URL) -> [PathComponent] {
         var components: [PathComponent] = []
 
+        // Normalize the current URL by resolving symlinks
+        let normalizedURL = currentURL.resolvingSymlinksInPath().standardized
+
         // Find the volume this path belongs to
-        let volumeInfo = getVolumeInfo(for: currentURL)
+        let volumeInfo = getVolumeInfo(for: normalizedURL)
 
         if let volume = volumeInfo {
             // Add the volume as the first component
@@ -236,7 +256,9 @@ class VolumeManager: ObservableObject {
             ))
 
             // Get path components relative to the volume
-            let relativePath = String(currentURL.path.dropFirst(volume.url.path.count))
+            let normalizedVolumePath = volume.url.resolvingSymlinksInPath().standardized.path
+            let normalizedCurrentPath = normalizedURL.path
+            let relativePath = String(normalizedCurrentPath.dropFirst(normalizedVolumePath.count))
             let pathParts = relativePath.split(separator: "/").map(String.init)
 
             var buildingURL = volume.url
@@ -269,7 +291,7 @@ class VolumeManager: ObservableObject {
             }
         } else {
             // Fallback: create components from the full path
-            let pathParts = currentURL.pathComponents.dropFirst() // Remove the leading "/"
+            let pathParts = normalizedURL.pathComponents.dropFirst() // Remove the leading "/"
             var buildingURL = URL(fileURLWithPath: "/")
 
             for pathPart in pathParts {
