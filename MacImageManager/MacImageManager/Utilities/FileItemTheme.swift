@@ -21,16 +21,16 @@ enum FileItemTheme {
             return .blue
         case .staticImage:
             // Check for specific image types for specialized colors
-            guard let type = item.uti else { return .teal }
+            guard let type = item.uti else { return .cyan }
             if type == .livePhoto { return .yellow }
             if type == .svg { return .green }
             if type.conforms(to: .rawImage) { return .indigo }
             if type == .heic || type == .heif { return .orange }
-            return .teal
+            return .cyan
         case .animatedGif:
-            return .pink
+            return .purple
         case .video:
-            return .red
+            return .pink
         case .unknown:
             guard let type = item.uti else { return .secondary }
             if type == .pdf { return .brown }
@@ -51,11 +51,11 @@ enum FileItemTheme {
         case .directory:
             return .blue
         case .staticImage:
-            return .teal
+            return .cyan
         case .animatedGif:
-            return .pink
+            return .purple
         case .video:
-            return .red
+            return .pink
         case .unknown:
             return .gray
         }
