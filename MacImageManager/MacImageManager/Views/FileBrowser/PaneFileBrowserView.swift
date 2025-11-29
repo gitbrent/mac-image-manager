@@ -17,6 +17,7 @@ struct PaneFileBrowserView: View {
     @FocusState private var isListFocused: Bool
     @FocusState private var isSearchFieldFocused: Bool
     @State private var searchText = ""
+    @State private var showingSortMenu = false
 
     private func clearSearch() {
         searchText = ""
@@ -69,60 +70,16 @@ struct PaneFileBrowserView: View {
 
                 // Search and Sort controls in same row
                 HStack(spacing: 8) {
-                    // Sort controls with integrated direction
-                    Menu {
-                        ForEach(SortCriteria.allCases) { criteria in
-                            Button(action: {
-                                browserModel.setSortCriteria(criteria)
-                            }) {
-                                HStack {
-                                    Image(systemName: criteria.iconName)
-                                    Text(criteria.rawValue)
-                                    if browserModel.sortBy == criteria {
-                                        Spacer()
-                                        Image(systemName: "checkmark")
-                                    }
-                                }
-                            }
-                        }
-
-                        Divider()
-
-                        Button(action: {
-                            if !browserModel.sortAscending {
-                                browserModel.toggleSortDirection()
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: "chevron.up")
-                                Text("Ascending")
-                                if browserModel.sortAscending {
-                                    Spacer()
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-
-                        Button(action: {
-                            if browserModel.sortAscending {
-                                browserModel.toggleSortDirection()
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: "chevron.down")
-                                Text("Descending")
-                                if !browserModel.sortAscending {
-                                    Spacer()
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    } label: {
+                    // Sort button
+                    Button(action: {
+                        showingSortMenu.toggle()
+                    }) {
                         HStack(spacing: 4) {
                             Image(systemName: browserModel.sortBy.iconName)
-                                .font(.system(size: 12))
-                            Image(systemName: browserModel.sortAscending ? "chevron.up" : "chevron.down")
-                                .font(.system(size: 10))
+                                .font(.system(size: 14))
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary)
                         }
                         .foregroundColor(.primary)
                         .padding(.horizontal, 8)
@@ -134,6 +91,9 @@ struct PaneFileBrowserView: View {
                     .accessibilityLabel("Sorting options")
                     .accessibilityHint("Choose a different sorting criteria and direction")
                     .help("Sort options")
+                    .popover(isPresented: $showingSortMenu) {
+                        SortMenuView(browserModel: browserModel, isPresented: $showingSortMenu)
+                    }
 
                     // Search field
                     HStack {
@@ -337,6 +297,230 @@ struct PaneFileBrowserView: View {
                 selectedImage = mediaFiles[currentIndex - 1]
             }
             // If at the beginning, do nothing (don't wrap around)
+        }
+    }
+}
+
+struct SortMenuView: View {
+    @ObservedObject var browserModel: BrowserModel
+    @Binding var isPresented: Bool
+    @State private var selectedIndex: Int = 0
+    @FocusState private var isFocused: Bool
+
+    private var currentSortIndex: Int {
+        if let index = SortCriteria.allCases.firstIndex(of: browserModel.sortBy) {
+            return index + (browserModel.sortAscending ? 0 : SortCriteria.allCases.count)
+        }
+        return 0
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            HStack {
+                Text("Sort Options")
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+
+            Divider()
+
+            // Sort criteria list
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(SortCriteria.allCases.enumerated()), id: \.element) { index, criteria in
+                        let isSelected = browserModel.sortBy == criteria
+
+                        Button(action: {
+                            browserModel.setSortCriteria(criteria)
+                            isPresented = false
+                        }) {
+                            HStack(spacing: 8) {
+                                Image(systemName: criteria.iconName)
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.primary)
+                                    .frame(width: 20)
+
+                                Text(criteria.rawValue)
+                                    .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                                    .foregroundColor(.primary)
+
+                                Spacer()
+
+                                if isSelected {
+                                    Image(systemName: "checkmark")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(.blue)
+                                        .accessibilityLabel("Currently selected")
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(criteria.rawValue)
+                        .accessibilityHint(isSelected ? "Currently selected sort criteria" : "Sort by \(criteria.rawValue)")
+                        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(
+                                    index == selectedIndex && isFocused && selectedIndex < SortCriteria.allCases.count
+                                        ? Color.secondary.opacity(0.2)
+                                        : (isSelected ? Color.blue.opacity(0.1) : Color.clear)
+                                )
+                        )
+                        .onHover { isHovering in
+                            if isHovering {
+                                selectedIndex = index
+                            }
+                        }
+                        .animation(.easeInOut(duration: 0.1), value: selectedIndex)
+                        .animation(.easeInOut(duration: 0.1), value: isSelected)
+                    }
+
+                    Divider()
+                        .padding(.vertical, 4)
+
+                    // Ascending option
+                    Button(action: {
+                        if !browserModel.sortAscending {
+                            browserModel.toggleSortDirection()
+                        }
+                        isPresented = false
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "chevron.up")
+                                .font(.system(size: 16))
+                                .foregroundColor(.primary)
+                                .frame(width: 20)
+
+                            Text("Ascending")
+                                .font(.system(size: 13, weight: browserModel.sortAscending ? .semibold : .medium))
+                                .foregroundColor(.primary)
+
+                            Spacer()
+
+                            if browserModel.sortAscending {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.blue)
+                                    .accessibilityLabel("Currently selected")
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Ascending")
+                    .accessibilityHint(browserModel.sortAscending ? "Currently selected order" : "Sort in ascending order")
+                    .accessibilityAddTraits(browserModel.sortAscending ? [.isSelected] : [])
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(
+                                selectedIndex == SortCriteria.allCases.count && isFocused
+                                    ? Color.secondary.opacity(0.2)
+                                    : (browserModel.sortAscending ? Color.blue.opacity(0.1) : Color.clear)
+                            )
+                    )
+                    .onHover { isHovering in
+                        if isHovering {
+                            selectedIndex = SortCriteria.allCases.count
+                        }
+                    }
+
+                    // Descending option
+                    Button(action: {
+                        if browserModel.sortAscending {
+                            browserModel.toggleSortDirection()
+                        }
+                        isPresented = false
+                    }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 16))
+                                .foregroundColor(.primary)
+                                .frame(width: 20)
+
+                            Text("Descending")
+                                .font(.system(size: 13, weight: !browserModel.sortAscending ? .semibold : .medium))
+                                .foregroundColor(.primary)
+
+                            Spacer()
+
+                            if !browserModel.sortAscending {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.blue)
+                                    .accessibilityLabel("Currently selected")
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Descending")
+                    .accessibilityHint(!browserModel.sortAscending ? "Currently selected order" : "Sort in descending order")
+                    .accessibilityAddTraits(!browserModel.sortAscending ? [.isSelected] : [])
+                    .background(
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(
+                                selectedIndex == SortCriteria.allCases.count + 1 && isFocused
+                                    ? Color.secondary.opacity(0.2)
+                                    : (!browserModel.sortAscending ? Color.blue.opacity(0.1) : Color.clear)
+                            )
+                    )
+                    .onHover { isHovering in
+                        if isHovering {
+                            selectedIndex = SortCriteria.allCases.count + 1
+                        }
+                    }
+                }
+            }
+            .frame(maxHeight: 300)
+        }
+        .frame(minWidth: 200, maxWidth: 240)
+        .focused($isFocused)
+        .onAppear {
+            selectedIndex = currentSortIndex
+            isFocused = true
+        }
+        .onKeyPress(.upArrow) {
+            if selectedIndex > 0 {
+                selectedIndex -= 1
+            }
+            return .handled
+        }
+        .onKeyPress(.downArrow) {
+            if selectedIndex < SortCriteria.allCases.count + 1 {
+                selectedIndex += 1
+            }
+            return .handled
+        }
+        .onKeyPress(.return) {
+            if selectedIndex < SortCriteria.allCases.count {
+                browserModel.setSortCriteria(SortCriteria.allCases[selectedIndex])
+            } else if selectedIndex == SortCriteria.allCases.count {
+                if !browserModel.sortAscending {
+                    browserModel.toggleSortDirection()
+                }
+            } else {
+                if browserModel.sortAscending {
+                    browserModel.toggleSortDirection()
+                }
+            }
+            isPresented = false
+            return .handled
+        }
+        .onKeyPress(.escape) {
+            isPresented = false
+            return .handled
         }
     }
 }
