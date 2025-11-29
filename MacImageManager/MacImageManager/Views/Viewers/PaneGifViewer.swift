@@ -238,11 +238,18 @@ struct PaneGifViewer: View {
 
                             // Primary Controls Row
                             HStack(spacing: 20) {
-                                // Frame Info - Left side
-                                Text("Frame \(currentFrameIndex + 1) / \(gifLoader.frames.count)")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.white.opacity(0.7))
-                                    .frame(width: 220, alignment: .leading)
+                                HStack(spacing: 0) {
+                                    // Frame Info - Left side
+                                    Text("Frame")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.primary)
+                                    
+                                    // Frame Info - Left side
+                                    Text(" \(currentFrameIndex + 1) / \(gifLoader.frames.count)")
+                                        .font(.system(size: 16))
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 225, alignment: .leading)
+                                }
 
                                 Spacer()
 
@@ -250,7 +257,7 @@ struct PaneGifViewer: View {
                                 Button(action: previousFrame) {
                                     Image(systemName: "backward.fill")
                                         .font(.system(size: 32))
-                                        .foregroundColor(isPlaying ? .white.opacity(0.3) : .white)
+                                        .foregroundColor(isPlaying ? .secondary : .white)
                                 }
                                 .buttonStyle(.plain)
                                 .disabled(isPlaying)
@@ -258,7 +265,7 @@ struct PaneGifViewer: View {
                                 // Play/Pause Button - Larger and centered
                                 Button(action: togglePlayPause) {
                                     Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                        .font(.system(size: 56))
+                                        .font(.system(size: 64))
                                         .foregroundColor(.white)
                                 }
                                 .buttonStyle(.plain)
@@ -267,7 +274,7 @@ struct PaneGifViewer: View {
                                 Button(action: nextFrame) {
                                     Image(systemName: "forward.fill")
                                         .font(.system(size: 32))
-                                        .foregroundColor(isPlaying ? .white.opacity(0.3) : .white)
+                                        .foregroundColor(isPlaying ? .secondary : .white)
                                 }
                                 .buttonStyle(.plain)
                                 .disabled(isPlaying)
@@ -277,20 +284,20 @@ struct PaneGifViewer: View {
                                 // Speed Control - Right side
                                 HStack(spacing: 8) {
                                     Text("Speed")
-                                        .foregroundColor(.white.opacity(0.8))
-                                        .font(.system(size: 12))
+                                        .foregroundColor(.primary)
+                                        .font(.system(size: 16))
 
                                     Slider(value: $animationSpeed, in: 0.25...3.0, step: 0.25)
                                         .frame(width: 120)
-                                        .tint(.white.opacity(0.6))
+                                        //.tint(.secondary)
 
                                     Text(String(format: "%.2fx", animationSpeed))
-                                        .foregroundColor(.white)
-                                        .font(.system(size: 12))
+                                        .foregroundColor(.secondary)
+                                        .font(.system(size: 16))
                                         .frame(width: 45, alignment: .leading)
                                         .monospacedDigit()
                                 }
-                                .frame(width: 220, alignment: .trailing)
+                                .frame(width: 240, alignment: .trailing)
 
                                 // WebView Toggle - Hidden unless needed (only shown after error)
                                 if gifLoader.error != nil {
