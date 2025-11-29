@@ -5,11 +5,12 @@
 - {OPTIONS}: e.g., sort folders first (BrowserModel > loadCurrentDirectory())
 - {HIG/MAC} Ensure HIG compliance and ensure Accessability implementation/support exists
 
-## FEATURES: browser
+## FEATURES: file-browser
 
-- add: filter by type (ex: "GIF")
+- add: image size options: Normal, Fit, Zoom
+- add: multi-select filter: by image-type (ex: "GIF")
 
-## FEATURES: browser: file-manager
+## FEATURES: file-browser: file-ops
 
 - add: a new file menu item and functionality: create folder
 - add: when an item is deleted, select the next one down (or up, or nothing)
